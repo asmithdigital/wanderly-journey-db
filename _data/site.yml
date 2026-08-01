@@ -1,8 +1,0 @@
-# Edit anything in this file to change the branding shown across the whole site.
-# No need to touch any HTML to change these — just edit the values below and push.
-
-brand_name: "Wanderly"
-brand_tagline: "Journey DB — Experiment"
-demo_notice: "⚠ Experiment — fictional Wanderly demo data, not connected to any real system"
-logo_initial: "W"
-accent_color: "#D6217E"

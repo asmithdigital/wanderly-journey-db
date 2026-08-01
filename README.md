@@ -1,1 +1,0 @@
-# wanderly-journey-db

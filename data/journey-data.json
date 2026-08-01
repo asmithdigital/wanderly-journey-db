@@ -1,0 +1,469 @@
+{
+  "STAGES": [
+    {
+      "id": "entice",
+      "name": "Trip inspiration",
+      "sub": "Browsing destinations",
+      "emo": "Hopeful",
+      "ec": "#1B8464",
+      "eb": "#E4F5EE",
+      "group": "Entice",
+      "sentiment": 1.4
+    },
+    {
+      "id": "searchflights",
+      "name": "Search flights",
+      "sub": "Comparing routes & fares",
+      "emo": "Curious",
+      "ec": "#B7791F",
+      "eb": "#FBF1DF",
+      "group": "Enter",
+      "sentiment": 0.5
+    },
+    {
+      "id": "searchhotels",
+      "name": "Search hotels",
+      "sub": "Comparing rooms & rates",
+      "emo": "Curious",
+      "ec": "#B7791F",
+      "eb": "#FBF1DF",
+      "group": "Enter",
+      "sentiment": 0.3
+    },
+    {
+      "id": "compare",
+      "name": "Compare options",
+      "sub": "Weighing up choices",
+      "emo": "Uncertain",
+      "ec": "#B7791F",
+      "eb": "#FBF1DF",
+      "group": "Engage",
+      "sentiment": -0.2
+    },
+    {
+      "id": "itinerary",
+      "name": "Build itinerary",
+      "sub": "Dates, rooms, extras",
+      "emo": "Cautious",
+      "ec": "#C0392B",
+      "eb": "#FBEAE8",
+      "group": "Engage",
+      "sentiment": -0.5
+    },
+    {
+      "id": "details",
+      "name": "Traveller details",
+      "sub": "Names, passports, contact",
+      "emo": "Tedious",
+      "ec": "#C0392B",
+      "eb": "#FBEAE8",
+      "group": "Engage",
+      "sentiment": -0.8
+    },
+    {
+      "id": "engage",
+      "name": "Payment",
+      "sub": "Checkout & confirm",
+      "emo": "Anxious",
+      "ec": "#C0392B",
+      "eb": "#FBEAE8",
+      "group": "Engage",
+      "sentiment": -0.9
+    },
+    {
+      "id": "exit",
+      "name": "Confirmation",
+      "sub": "Booking complete",
+      "emo": "Relieved",
+      "ec": "#1B8464",
+      "eb": "#E4F5EE",
+      "group": "Exit",
+      "sentiment": 0.8
+    },
+    {
+      "id": "extend",
+      "name": "Manage trip",
+      "sub": "Check-in, changes",
+      "emo": "Uncertain",
+      "ec": "#B7791F",
+      "eb": "#FBF1DF",
+      "group": "Extend",
+      "sentiment": -0.3
+    }
+  ],
+  "STAGE_GROUPS": [
+    {
+      "label": "Entice",
+      "count": 1
+    },
+    {
+      "label": "Enter",
+      "count": 2
+    },
+    {
+      "label": "Engage",
+      "count": 4
+    },
+    {
+      "label": "Exit",
+      "count": 1
+    },
+    {
+      "label": "Extend",
+      "count": 1
+    }
+  ],
+  "THEMES": {
+    "satisfaction": {
+      "label": "Satisfaction",
+      "color": "#2C6E8C",
+      "bg": "#E7F1F5",
+      "explainer": "Part of the Satisfaction theme — how travellers rate their overall experience, tracked over time."
+    },
+    "dropoffs": {
+      "label": "Drop-offs",
+      "color": "#C0392B",
+      "bg": "#FBEAE8",
+      "explainer": "Part of the Drop-offs theme — points across the funnel where travellers leave before completing the step in front of them."
+    }
+  },
+  "SUBMETRICS": [
+    {
+      "id": "SM1",
+      "label": "NPS",
+      "theme": "satisfaction",
+      "stageId": null,
+      "value": "+28",
+      "trend": "up",
+      "trendGood": true,
+      "changeLabel": "vs last quarter",
+      "description": "Net Promoter Score across all travellers, quarterly in-app survey.",
+      "relatedGap": null,
+      "history": [
+        {
+          "date": "Q1 2026",
+          "num": 14
+        },
+        {
+          "date": "Q2 2026",
+          "num": 28
+        }
+      ],
+      "uploads": [
+        {
+          "date": "Q2 2026",
+          "source": "Wanderly Quarterly CX Survey",
+          "uploadedBy": "Demo data"
+        }
+      ]
+    },
+    {
+      "id": "SM2",
+      "label": "CSAT",
+      "theme": "satisfaction",
+      "stageId": null,
+      "value": "81%",
+      "trend": "flat",
+      "trendGood": false,
+      "changeLabel": "vs last quarter",
+      "description": "Overall customer satisfaction score, quarterly in-app survey.",
+      "relatedGap": null,
+      "history": [
+        {
+          "date": "Q2 2026",
+          "num": 81
+        }
+      ],
+      "uploads": [
+        {
+          "date": "Q2 2026",
+          "source": "Wanderly Quarterly CX Survey",
+          "uploadedBy": "Demo data"
+        }
+      ]
+    },
+    {
+      "id": "SM3",
+      "label": "Search abandonment",
+      "theme": "dropoffs",
+      "stageId": "searchflights",
+      "value": "38%",
+      "trend": "up",
+      "trendGood": false,
+      "changeLabel": "leave without comparing options",
+      "description": "38% of travellers leave the search results page without comparing more than one option.",
+      "relatedGap": "GAP-1",
+      "history": [
+        {
+          "date": "Jun 2026",
+          "num": 38
+        }
+      ],
+      "uploads": [
+        {
+          "date": "Jun 2026",
+          "source": "Wanderly Funnel Analytics",
+          "uploadedBy": "Demo data"
+        }
+      ]
+    },
+    {
+      "id": "SM4",
+      "label": "Checkout drop-off",
+      "theme": "dropoffs",
+      "stageId": "engage",
+      "value": "14%",
+      "trend": "down",
+      "trendGood": true,
+      "changeLabel": "vs last month",
+      "description": "14% of travellers who reach checkout leave before completing payment.",
+      "relatedGap": null,
+      "history": [
+        {
+          "date": "May 2026",
+          "num": 19
+        },
+        {
+          "date": "Jun 2026",
+          "num": 14
+        }
+      ],
+      "uploads": [
+        {
+          "date": "Jun 2026",
+          "source": "Wanderly Funnel Analytics",
+          "uploadedBy": "Demo data"
+        }
+      ]
+    }
+  ],
+  "PERSONAS": [
+    {
+      "id": "luca",
+      "name": "Last-Minute Luca",
+      "product": "Wanderly",
+      "color": "#7C3AED",
+      "bg": "#F2ECFE",
+      "img": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%237C3AED'/%3E%3Ctext x='50' y='62' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3ELL%3C/text%3E%3C/svg%3E",
+      "aboutMe": [
+        "Books trips on his lunch break, usually within a week of travelling",
+        "Doesn't have time to compare more than a couple of options",
+        "Wants to trust the first good-looking deal he finds"
+      ],
+      "needs": [
+        "Fast checkout",
+        "Confidence he's not overpaying",
+        "Clear cancellation terms in case plans change"
+      ],
+      "painPoints": [
+        "Too many similar deals to compare quickly",
+        "Re-entering the same details every time he books",
+        "Anxious about payment status if something looks off"
+      ],
+      "goals": [
+        "Book a trip in under ten minutes without regretting it"
+      ],
+      "scenario": "Needs to book a weekend trip with two days' notice, on his phone, between meetings",
+      "quote": "I book on my lunch break, I don't have time to compare ten tabs",
+      "journeyName": "Wanderly booking journey",
+      "journeyProduct": "Wanderly"
+    },
+    {
+      "id": "claire",
+      "name": "Careful Claire",
+      "product": "Wanderly",
+      "color": "#2563A8",
+      "bg": "#E7F0FA",
+      "img": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%232563A8'/%3E%3Ctext x='50' y='62' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3ECC%3C/text%3E%3C/svg%3E",
+      "aboutMe": [
+        "Plans trips months in advance",
+        "Reads reviews and compares thoroughly before committing",
+        "Books for her whole family, so mistakes feel costly"
+      ],
+      "needs": [
+        "Clear information about what's included",
+        "Confidence prices won't change later",
+        "Easy way to manage or amend a booking after the fact"
+      ],
+      "painPoints": [
+        "Unsure what's included in a room booking until she clicks in",
+        "Worried about being upsold on optional extras",
+        "Hard to find how to make changes once booked"
+      ],
+      "goals": [
+        "Book confidently for the whole family with no surprises later"
+      ],
+      "scenario": "Planning a family holiday three months out, comparing options carefully before booking",
+      "quote": "I want to know exactly what I'm getting before I hand over my card details",
+      "journeyName": "Wanderly booking journey",
+      "journeyProduct": "Wanderly"
+    }
+  ],
+  "SOLUTIONS": [
+    {
+      "ref": "W1",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "effort": 2,
+      "mv": 4,
+      "bv": 4,
+      "road": "on-roadmap",
+      "isIdea": false,
+      "title": "Add a 'good value' indicator to comparable deals",
+      "summary": "Add a 'good value' indicator next to comparable deals so travellers can tell at a glance which options are worth a closer look.",
+      "ratingWhy": "High-ish value because search abandonment is a real, measured problem, and effort is moderate since it builds on existing comparison data rather than new infrastructure.",
+      "roadmapNote": "Demo data — placeholder roadmap note.",
+      "research": {
+        "title": "Wanderly Search Usability Test",
+        "date": "May 2026",
+        "url": "#"
+      },
+      "flags": []
+    },
+    {
+      "ref": "W2",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "effort": 3,
+      "mv": 3,
+      "bv": 3,
+      "road": "not-on-roadmap",
+      "isIdea": true,
+      "title": "Surface key fare differences in the comparison list",
+      "summary": "Surface baggage allowance and key fare differences directly in the comparison list, instead of requiring a click into each option.",
+      "ratingWhy": "Moderate value, this is a floated idea rather than something tested with real travellers yet.",
+      "roadmapNote": "Demo data — not yet prioritised.",
+      "research": null,
+      "flags": [
+        "No research document beyond the journey map itself for this one."
+      ]
+    },
+    {
+      "ref": "W3",
+      "stage": "engage",
+      "product": "Wanderly",
+      "effort": 3,
+      "mv": 5,
+      "bv": 4,
+      "road": "on-roadmap",
+      "isIdea": false,
+      "title": "Clear payment status after a failed attempt",
+      "summary": "Show a clear, unambiguous payment status screen immediately after any failed payment attempt, so travellers know whether they were charged.",
+      "ratingWhy": "High member value since an ambiguous failed payment is genuinely distressing, business value high since it likely drives support contacts down.",
+      "roadmapNote": "Demo data — placeholder roadmap note.",
+      "research": {
+        "title": "Wanderly Checkout Support Ticket Review",
+        "date": "Jun 2026",
+        "url": "#"
+      },
+      "flags": []
+    }
+  ],
+  "INSIGHTS": [
+    {
+      "id": "IN1",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "type": "pain",
+      "text": "There are too many similar-looking deals, I can't tell what's actually a good price",
+      "analytics": false,
+      "link": "#"
+    },
+    {
+      "id": "IN2",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "type": "delight",
+      "text": "I liked seeing 'price is trending down' on a route I was watching",
+      "analytics": false,
+      "link": "#"
+    },
+    {
+      "id": "IN3",
+      "stage": "engage",
+      "product": "Wanderly",
+      "type": "pain",
+      "text": "My payment failed and I don't know if I was charged or not",
+      "analytics": true,
+      "link": "#"
+    },
+    {
+      "id": "IN4",
+      "stage": "engage",
+      "product": "Wanderly",
+      "type": "delight",
+      "text": "Paying with my saved card in one tap was great",
+      "analytics": false,
+      "link": "#"
+    },
+    {
+      "id": "IN5",
+      "stage": "exit",
+      "product": "Wanderly",
+      "type": "pain",
+      "text": "It kept prompting me to create an account after I'd already paid as a guest",
+      "analytics": false,
+      "link": "#"
+    },
+    {
+      "id": "IN6",
+      "stage": "extend",
+      "product": "Wanderly",
+      "type": "pain",
+      "text": "Changing my dates sent me to a page that felt disconnected from my actual booking",
+      "analytics": false,
+      "link": "#"
+    }
+  ],
+  "OPPS": [
+    {
+      "id": "H1",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "highValue": true,
+      "text": "HMW make it clearer which deals are genuinely good value, so travellers can compare confidently at a glance?",
+      "insights": [
+        "IN1"
+      ],
+      "solution": "W1"
+    },
+    {
+      "id": "H2",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "highValue": false,
+      "text": "HMW surface baggage allowance and fare differences directly in the comparison list?",
+      "insights": [
+        "IN2"
+      ],
+      "solution": "W2"
+    },
+    {
+      "id": "H3",
+      "stage": "engage",
+      "product": "Wanderly",
+      "highValue": true,
+      "text": "HMW make failed-payment status unambiguous, so travellers know immediately whether they were charged?",
+      "insights": [
+        "IN3"
+      ],
+      "solution": "W3"
+    }
+  ],
+  "GAPS": [
+    {
+      "id": "GAP-1",
+      "stage": "searchflights",
+      "product": "Wanderly",
+      "verdict": "genuine",
+      "gapTitle": "No research explains why people leave without comparing",
+      "figure": "38% search abandonment",
+      "mapSays": "We know the number, but nothing in our research explains why travellers leave the search results page without comparing more than one option.",
+      "docName": "Wanderly Funnel Analytics",
+      "docSearch": "38%",
+      "jmSearch": null,
+      "solution": null,
+      "discoveryNote": "Discovery opportunity: a short exit survey on the search results page would tell us whether this is a trust problem, a content problem, or people comparison-shopping elsewhere."
+    }
+  ]
+}
