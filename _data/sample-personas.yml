@@ -1,0 +1,11 @@
+# These are placeholder examples for this prototype phase only.
+# Once the database is connected in the next step, this list disappears —
+# personas will come from the database instead, and become editable through the app itself,
+# not by editing this file.
+
+- name: "Last-Minute Luca"
+  quote: "I book on my lunch break, I don't have time to compare ten tabs"
+  color: "#7C3AED"
+- name: "Careful Claire"
+  quote: "I want to know exactly what I'm getting before I hand over my card details"
+  color: "#2563A8"

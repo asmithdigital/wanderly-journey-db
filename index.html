@@ -1,0 +1,27 @@
+---
+layout: default
+---
+<h1>Personas</h1>
+<p class="sub">These two are placeholder examples for now — see the note in <code>_data/sample-personas.yml</code>.</p>
+
+{% for p in site.data['sample-personas'] %}
+  {% assign initials = p.name | slice: 0, 1 %}
+  {% include persona-card.html name=p.name quote=p.quote color=p.color initials=initials %}
+{% endfor %}
+
+<button class="btn" onclick="notConnectedYet()">+ Add a new persona</button>
+
+<h1 style="margin-top:32px">Solutions</h1>
+<p class="sub">Effort, member value, and business value will be editable here once the database is connected.</p>
+
+<div class="card sol-row">
+  <input type="text" value="Add a 'good value' indicator to comparable deals" disabled>
+  <span class="stat-pill">Effort: 2</span>
+  <span class="stat-pill">Member value: 4</span>
+  <span class="stat-pill">Business value: 4</span>
+  <button class="btn" style="width:auto;padding:6px 12px" onclick="notConnectedYet()">Save</button>
+</div>
+
+<div id="statusBox" class="status-box" style="display:none"></div>
+
+<script src="{{ '/assets/js/app.js' | relative_url }}"></script>

@@ -1,0 +1,33 @@
+:root{
+  --ink:#1C1C1E; --ink-soft:#5B5B60; --ink-faint:#9494A0;
+  --bg:#FAFAF9; --panel:#FFFFFF; --line:#EAEAE7;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:24px 24px 80px}
+
+.topbar{display:flex;align-items:center;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.brand-name{font-weight:800;font-size:15px}
+.brand-tagline{font-size:11.5px;color:var(--ink-faint)}
+.demo-tag{display:block;font-size:10px;font-weight:700;text-transform:uppercase;background:#FDF1DF;color:#B7791F;padding:6px 24px}
+
+h1{font-size:20px;font-weight:800;margin-bottom:4px}
+.sub{font-size:13px;color:var(--ink-faint);margin-bottom:16px}
+code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12.5px}
+
+.persona-card{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.persona-avatar{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.persona-name{font-weight:700;font-size:14px}
+.persona-quote{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:2px}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.sol-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sol-row input{flex:1;min-width:200px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:var(--bg);color:var(--ink-faint)}
+.stat-pill{font-size:11px;font-weight:600;color:var(--ink-soft);background:var(--bg);padding:4px 9px;border-radius:20px}
+
+.btn{font-family:var(--sans);font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;background:var(--ink);color:#fff}
+.btn:hover{opacity:.9}
+
+.status-box{margin-top:16px;padding:12px 14px;background:#FFF9EC;border:1px dashed #E0C87A;border-radius:9px;font-size:13px;color:#7A5A0A}
