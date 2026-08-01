@@ -169,11 +169,12 @@ function openPanel(kind,id,isNavCall){
     const pr = computePriority(s);
     document.getElementById('panelScores').innerHTML=`<div class="prop-list">
       <div class="prop-row"><span class="prop-row-label">Priority</span><span class="prop-row-val"><span class="tiny-pill" style="background:${pr.bg};color:${pr.color};font-weight:800">${pr.label}</span></span></div>
-      <div class="prop-row"><span class="prop-row-label">Effort</span><span class="prop-row-val">${EFFORT_LABEL[s.effort]}</span></div>
-      <div class="prop-row"><span class="prop-row-label">Member value</span><span class="prop-row-val">${s.mv}/5</span></div>
-      <div class="prop-row"><span class="prop-row-label">Business value</span><span class="prop-row-val">${s.bv}/5</span></div>
-      <div class="prop-row"><span class="prop-row-label">Status</span><span class="prop-row-val">${ROAD_LABEL[s.road]}</span></div>
-    </div>`;
+      <div class="prop-row" id="edit-row-effort"><span class="prop-row-label">Effort</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','effort')">${EFFORT_LABEL[s.effort]} <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-mv"><span class="prop-row-label">Member value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','mv')">${s.mv}/5 <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-bv"><span class="prop-row-label">Business value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','bv')">${s.bv}/5 <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-road"><span class="prop-row-label">Status</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','road')">${ROAD_LABEL[s.road]} <span class="edit-hint">✎</span></span></div>
+    </div>
+    <p class="edit-note">Click any value above to change it. This is a live preview of editing, not yet connected to anywhere permanent — refreshing the page brings back the original values.</p>`;
     const insightCount = new Set((s.opps||[]).flatMap(oid=>(oppById[oid]||{insights:[]}).insights)).size;
     const solGaps = GAPS.filter(g=>g.solution===s.ref);
     const solLinkedSubs = allSubMetrics().filter(sm=>solGaps.some(g=>g.id===sm.relatedGap));
@@ -232,6 +233,28 @@ function openPanel(kind,id,isNavCall){
   document.getElementById('panel').classList.add('open');
 }
 
+function startEditSolutionField(ref, field){
+  const s = solutionByRef[ref]; if(!s) return;
+  const row = document.getElementById('edit-row-'+field);
+  const valCell = row.querySelector('.prop-row-val');
+  let optionsHtml, currentVal;
+  if(field==='effort'){ currentVal=s.effort; optionsHtml=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===currentVal?'selected':''}>${EFFORT_LABEL[n]}</option>`).join(''); }
+  else if(field==='mv' || field==='bv'){ currentVal=s[field]; optionsHtml=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===currentVal?'selected':''}>${n}/5</option>`).join(''); }
+  else if(field==='road'){ currentVal=s.road; optionsHtml=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>`<option value="${r}" ${r===currentVal?'selected':''}>${ROAD_LABEL[r]}</option>`).join(''); }
+  valCell.innerHTML = `<select id="editSelect-${field}" class="inline-edit-select">${optionsHtml}</select> <button class="inline-edit-save" onclick="saveEditSolutionField('${ref}','${field}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button>`;
+}
+function saveEditSolutionField(ref, field){
+  const s = solutionByRef[ref]; if(!s) return;
+  const select = document.getElementById('editSelect-'+field);
+  const raw = select.value;
+  if(field==='road') s.road = raw;
+  else s[field] = parseInt(raw);
+  // Updates the in-memory copy only — nothing is written anywhere permanent yet.
+  // This is a live preview of the editing interaction, refreshing the page reloads
+  // the original data/journey-data.json and this change disappears.
+  openPanel('solution', ref);
+  render();
+}
 function closePanel(){
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');

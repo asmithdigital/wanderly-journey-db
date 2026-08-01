@@ -337,3 +337,11 @@ button *,[onclick] *,.mini-card *,.link-item-row *,.bubble *,.fdropdown-trigger 
 .bp-section-boundary{border-top:6px solid #2563A8!important;position:relative}
 .bp-connector{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:20px;font-weight:800;line-height:1;padding:2px 0;position:relative}
 .bp-connector::before{content:'';position:absolute;top:-9px;bottom:calc(100% - 2px);width:2px;background:var(--accent);left:50%;transform:translateX(-50%)}
+/* Inline editing preview — not yet connected to anywhere permanent */
+.editable-val{cursor:pointer;border-bottom:1px dashed var(--ink-faint)}
+.editable-val:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.edit-hint{font-size:10px;opacity:.5}
+.edit-note{font-size:11px;color:var(--ink-faint);font-style:italic;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.inline-edit-select{font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font-family:var(--sans)}
+.inline-edit-save{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;margin-left:4px}
+.inline-edit-cancel{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;margin-left:4px}
