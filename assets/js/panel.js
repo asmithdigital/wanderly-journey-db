@@ -95,6 +95,11 @@ function openPanel(kind,id,isNavCall){
     document.getElementById('panelHead').style.paddingRight='150px';
     allTabs[6].textContent='Journeys (1)'; allTabs[6].style.display='inline';
     document.getElementById('tab-overview').innerHTML=`
+      <div class="prop-list" id="persona-edit-fields">
+        <div class="prop-row" id="edit-row-name"><span class="prop-row-label">Name</span><span class="prop-row-val editable-val" onclick="startEditPersonaField('${p.id}','name')">${esc(p.name)} <span class="edit-hint">✎</span></span></div>
+        <div class="prop-row" id="edit-row-quote"><span class="prop-row-label">Quote</span><span class="prop-row-val editable-val" onclick="startEditPersonaField('${p.id}','quote')">${esc(p.quote)} <span class="edit-hint">✎</span></span></div>
+      </div>
+      <p class="edit-note">Click any value above to change it. This is a live preview of editing, not yet connected to anywhere permanent — refreshing the page brings back the original values.</p>
       <p class="plabel">About me</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.aboutMe.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       <p class="plabel">Needs</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.needs.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       <p class="plabel">Pain points</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.painPoints.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
@@ -233,6 +238,22 @@ function openPanel(kind,id,isNavCall){
   document.getElementById('panel').classList.add('open');
 }
 
+function startEditPersonaField(id, field){
+  const p = PERSONAS.find(x=>x.id===id); if(!p) return;
+  const row = document.getElementById('edit-row-'+field);
+  const valCell = row.querySelector('.prop-row-val');
+  const currentVal = p[field] || '';
+  valCell.innerHTML = `<input type="text" id="editInput-${field}" class="inline-edit-select" value="${esc(currentVal)}" style="width:220px"> <button class="inline-edit-save" onclick="saveEditPersonaField('${id}','${field}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('persona','${id}')">Cancel</button>`;
+  valCell.onclick = null;
+}
+function saveEditPersonaField(id, field){
+  const p = PERSONAS.find(x=>x.id===id); if(!p) return;
+  const input = document.getElementById('editInput-'+field);
+  p[field] = input.value;
+  // In-memory only, same as solution editing — nothing persists past a refresh yet.
+  openPanel('persona', id);
+  render();
+}
 function startEditSolutionField(ref, field){
   const s = solutionByRef[ref]; if(!s) return;
   const row = document.getElementById('edit-row-'+field);
@@ -242,6 +263,7 @@ function startEditSolutionField(ref, field){
   else if(field==='mv' || field==='bv'){ currentVal=s[field]; optionsHtml=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===currentVal?'selected':''}>${n}/5</option>`).join(''); }
   else if(field==='road'){ currentVal=s.road; optionsHtml=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>`<option value="${r}" ${r===currentVal?'selected':''}>${ROAD_LABEL[r]}</option>`).join(''); }
   valCell.innerHTML = `<select id="editSelect-${field}" class="inline-edit-select">${optionsHtml}</select> <button class="inline-edit-save" onclick="saveEditSolutionField('${ref}','${field}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button>`;
+  valCell.onclick = null;
 }
 function saveEditSolutionField(ref, field){
   const s = solutionByRef[ref]; if(!s) return;
