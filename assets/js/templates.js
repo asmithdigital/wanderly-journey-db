@@ -77,7 +77,7 @@ function esc(s){return (s||"").toString().replace(/&/g,"&amp;").replace(/</g,"&l
 
 function insightMini(i){
   const vis = insightVisible(i);
-  return `<div class="mini-card is-${i.type}${!vis?' hidden':''}" data-key="insight-${i.id}" onclick="openPanel('insight','${i.id}')">
+  return `<div class="mini-card is-${i.type}${!vis?' hidden':''}" data-key="insight-${i.id}" draggable="true" ondragstart="handleDragStart(event,'insight','${i.id}')" onclick="openPanel('insight','${i.id}')">
     <div class="mini-card-top">
       <span class="card-icon ${i.type}">${TYPE_ICON[i.type]}</span>
       <div style="flex:1;min-width:0">
@@ -95,7 +95,7 @@ function insightMini(i){
 function gapMini(g){
   const vis=gapVisible(g);
   const vc={"genuine":"gap","partial":"on-hold","well":"in-delivery"}[g.verdict];
-  return `<div class="mini-card${!vis?' hidden':''}" data-key="gap-${g.id}" onclick="openPanel('gap','${g.id}')">
+  return `<div class="mini-card${!vis?' hidden':''}" data-key="gap-${g.id}" draggable="true" ondragstart="handleDragStart(event,'gap','${g.id}')" onclick="openPanel('gap','${g.id}')">
     <div class="mini-card-top">
       <span class="card-icon ${VERDICT_CLASS[g.verdict]}">◆</span>
       <div style="flex:1;min-width:0">
@@ -114,7 +114,7 @@ function solutionMini(s){
   const vis = solutionVisible(s);
   const avg = ((s.mv+s.bv)/2).toFixed(1);
   const pr = computePriority(s);
-  return `<div class="mini-card is-solution${!vis?' hidden':''}${s.isIdea?' is-idea':''}" data-key="sol-${s.ref}" onclick="openPanel('solution','${s.ref}')" style="position:relative">
+  return `<div class="mini-card is-solution${!vis?' hidden':''}${s.isIdea?' is-idea':''}" data-key="sol-${s.ref}" draggable="true" ondragstart="handleDragStart(event,'solution','${s.ref}')" onclick="openPanel('solution','${s.ref}')" style="position:relative">
     <div class="mini-card-top">
       <span class="card-icon solution">◉</span>
       <div style="flex:1;min-width:0">
@@ -139,7 +139,7 @@ function solutionMini(s){
 function oppMini(o){
   const sol=o.solution?solutionByRef[o.solution]:null;
   const vis = oppVisible(o);
-  return `<div class="mini-card${!vis?' hidden':''}" data-key="opp-${o.id}" onclick="openPanel('opp','${o.id}')">
+  return `<div class="mini-card${!vis?' hidden':''}" data-key="opp-${o.id}" draggable="true" ondragstart="handleDragStart(event,'opp','${o.id}')" onclick="openPanel('opp','${o.id}')">
     <div class="mini-card-top">
       <span class="card-icon hmw">⚡</span>
       <div style="flex:1;min-width:0">

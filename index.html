@@ -34,6 +34,7 @@
     <div class="fdropdown" id="fd-road" data-key="road"></div>
     <div class="fdropdown" id="fd-priority" data-key="priority"></div>
     <button id="clearFiltersBtn" class="clear-filters-btn" onclick="clearAllDropdownFilters()" style="display:none">Clear all</button>
+    <button class="add-new-btn" onclick="openAddModal()">+ Add</button>
     <label class="idea-checkbox">
       <input type="checkbox" id="ideaCheckbox">
       <span>Show ideas</span>
@@ -132,5 +133,14 @@
 <script src="assets/js/templates.js"></script>
 <script src="assets/js/panel.js"></script>
 <script src="assets/js/app.js"></script>
+<div class="add-modal-overlay" id="addModalOverlay" onclick="closeAddModal()"></div>
+<div class="add-modal" id="addModal">
+  <div class="add-modal-head">
+    <span>Add something new</span>
+    <button class="panel-close" onclick="closeAddModal()">×</button>
+  </div>
+  <div class="add-modal-body" id="addModalBody"></div>
+</div>
+
 </body>
 </html>

@@ -165,22 +165,22 @@ function renderJourney(){
   html+=`<div class="lane-label"><span class="lane-icon">◉</span><span class="lane-label-inner">Solutions</span></div>`;
   STAGES.forEach(st=>{
     const items=SOLUTIONS.filter(s=>s.stage===st.id);
-    html+=`<div class="lane-cell">${items.map(solutionMini).join('')}</div>`;
+    html+=`<div class="lane-cell" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${st.id}')">${items.map(solutionMini).join('')}</div>`;
   });
   html+=`<div class="lane-label"><span class="lane-icon">⚡</span><span class="lane-label-inner">Opportunities</span></div>`;
   STAGES.forEach(st=>{
     const items=OPPS.filter(o=>o.stage===st.id);
-    html+=`<div class="lane-cell">${items.map(oppMini).join('')}</div>`;
+    html+=`<div class="lane-cell" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${st.id}')">${items.map(oppMini).join('')}</div>`;
   });
   html+=`<div class="lane-label"><span class="lane-icon">◐</span><span class="lane-label-inner">Insights</span></div>`;
   STAGES.forEach(st=>{
     const items=INSIGHTS.filter(i=>i.stage===st.id);
-    html+=`<div class="lane-cell">${items.map(insightMini).join('')}</div>`;
+    html+=`<div class="lane-cell" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${st.id}')">${items.map(insightMini).join('')}</div>`;
   });
   html+=`<div class="lane-label"><span class="lane-icon">◈</span><span class="lane-label-inner">Analytics gaps</span></div>`;
   STAGES.forEach(st=>{
     const items=GAPS.filter(g=>g.stage===st.id);
-    html+=`<div class="lane-cell">${items.map(gapMini).join('')}</div>`;
+    html+=`<div class="lane-cell" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${st.id}')">${items.map(gapMini).join('')}</div>`;
   });
   grid.innerHTML=html;
   const stageless=GAPS.filter(g=>!g.stage);
@@ -485,3 +485,171 @@ document.addEventListener('mouseover', e=>{
     clickable.querySelectorAll('*').forEach(el=>el.style.setProperty('cursor','pointer','important'));
   }
 });
+
+// ---- ADD NEW ITEM ----
+// Creates a brand new Insight, Opportunity, or Solution from scratch, entirely in memory.
+// Nothing here is saved anywhere permanent yet — refreshing the page removes anything
+// added here, same as every other edit at this stage.
+function nextId(prefix, arr, idField){
+  let max = 0;
+  arr.forEach(item=>{
+    const raw = item[idField];
+    const num = parseInt(String(raw).replace(prefix, ''));
+    if(!isNaN(num) && num > max) max = num;
+  });
+  return prefix + (max + 1);
+}
+function openAddModal(){
+  document.getElementById('addModalOverlay').classList.add('open');
+  document.getElementById('addModal').classList.add('open');
+  renderAddForm('insight');
+}
+function closeAddModal(){
+  document.getElementById('addModalOverlay').classList.remove('open');
+  document.getElementById('addModal').classList.remove('open');
+}
+function stageOptionsHtml(selected){
+  return STAGES.map(st=>`<option value="${st.id}" ${st.id===selected?'selected':''}>${esc(st.name)}</option>`).join('');
+}
+function renderAddForm(type){
+  const body = document.getElementById('addModalBody');
+  const typeSelectHtml = `<div class="add-field"><label>What are you adding?</label>
+    <select id="addTypeSelect" onchange="renderAddForm(this.value)">
+      <option value="insight" ${type==='insight'?'selected':''}>An insight (pain point / delight)</option>
+      <option value="opportunity" ${type==='opportunity'?'selected':''}>An opportunity (How Might We)</option>
+      <option value="solution" ${type==='solution'?'selected':''}>A solution</option>
+      <option value="metric" ${type==='metric'?'selected':''}>A metric</option>
+    </select></div>`;
+
+  const commonBottomHtml = `<div class="add-field"><label>Your name</label><input type="text" id="addCreatedBy" placeholder="e.g. Andrew Smith"></div>`;
+
+  let fieldsHtml = '';
+  if(type==='insight'){
+    fieldsHtml = `
+      <div class="add-field"><label>What did someone say or notice?</label><textarea id="addInsightText" rows="2" placeholder="e.g. I couldn't tell if the price included fees"></textarea></div>
+      <div class="add-field"><label>Type</label><select id="addInsightType"><option value="pain">Pain point</option><option value="delight">Delight</option><option value="observation">Observation</option></select></div>
+      <div class="add-field"><label>Which stage?</label><select id="addInsightStage">${stageOptionsHtml()}</select></div>
+      <div class="add-field"><label>Link (optional)</label><input type="text" id="addInsightLink" placeholder="https://..."></div>`;
+  } else if(type==='opportunity'){
+    const insightOptions = INSIGHTS.map(i=>`<label><input type="checkbox" value="${i.id}"> ${esc(i.text.slice(0,70))}${i.text.length>70?'…':''}</label>`).join('');
+    fieldsHtml = `
+      <div class="add-field"><label>How Might We...?</label><textarea id="addOppText" rows="2" placeholder="e.g. HMW make the price shown always match what's charged?"></textarea></div>
+      <div class="add-field"><label>Which stage?</label><select id="addOppStage">${stageOptionsHtml()}</select></div>
+      <div class="add-field"><label>Related insights</label><div class="add-checklist" id="addOppInsights">${insightOptions || '<span class="empty-note">No insights exist yet to link.</span>'}</div></div>`;
+  } else if(type==='solution'){
+    fieldsHtml = `
+      <div class="add-field"><label>Title</label><input type="text" id="addSolTitle" placeholder="e.g. Show fees inline with the price"></div>
+      <div class="add-field"><label>Summary</label><textarea id="addSolSummary" rows="2" placeholder="What would this actually do?"></textarea></div>
+      <div class="add-field"><label>Which stage?</label><select id="addSolStage">${stageOptionsHtml()}</select></div>
+      <div class="add-field"><label>Effort</label><select id="addSolEffort">${[1,2,3,4,5].map(n=>`<option value="${n}">${EFFORT_LABEL[n]}</option>`).join('')}</select></div>
+      <div class="add-field"><label>Member value</label><select id="addSolMv">${[1,2,3,4,5].map(n=>`<option value="${n}">${n}/5</option>`).join('')}</select></div>
+      <div class="add-field"><label>Business value</label><select id="addSolBv">${[1,2,3,4,5].map(n=>`<option value="${n}">${n}/5</option>`).join('')}</select></div>
+      <div class="add-field"><label>Status</label><select id="addSolRoad"><option value="not-on-roadmap">Not on roadmap</option><option value="on-roadmap">On roadmap</option><option value="on-hold">On hold</option><option value="in-delivery">In delivery</option></select></div>`;
+  } else if(type==='metric'){
+    fieldsHtml = `
+      <div class="add-field"><label>Metric name</label><input type="text" id="addMetricLabel" placeholder="e.g. Checkout abandonment rate"></div>
+      <div class="add-field"><label>Value</label><input type="text" id="addMetricValue" placeholder="e.g. 12%"></div>
+      <div class="add-field"><label>Is this global, or specific to one stage?</label>
+        <select id="addMetricScope" onchange="document.getElementById('addMetricStageWrap').style.display=this.value==='stage'?'block':'none'">
+          <option value="global">Global (applies across the whole journey)</option>
+          <option value="stage">Specific to one stage</option>
+        </select>
+      </div>
+      <div class="add-field" id="addMetricStageWrap" style="display:none"><label>Which stage?</label><select id="addMetricStage">${stageOptionsHtml()}</select></div>
+      <div class="add-field"><label>Source</label><input type="text" id="addMetricSource" placeholder="e.g. Support ticket tagging, Jun 2026"></div>`;
+  }
+
+  body.innerHTML = typeSelectHtml + fieldsHtml + commonBottomHtml + `<button class="add-modal-save" onclick="saveNewItem('${type}')">Add ${type}</button>`;
+}
+function saveNewItem(type){
+  const createdBy = document.getElementById('addCreatedBy').value || 'Unknown';
+  const createdDate = new Date().toISOString().slice(0,10);
+
+  if(type==='insight'){
+    const text = document.getElementById('addInsightText').value.trim();
+    if(!text){ alert('Please enter the pain point or delight text.'); return; }
+    const newItem = {
+      id: nextId('IN', INSIGHTS, 'id'),
+      stage: document.getElementById('addInsightStage').value,
+      product: 'Wanderly', type: document.getElementById('addInsightType').value,
+      text, analytics: false, link: document.getElementById('addInsightLink').value || '#', createdBy, createdDate
+    };
+    INSIGHTS.push(newItem);
+  } else if(type==='metric'){
+    const label = document.getElementById('addMetricLabel').value.trim();
+    if(!label){ alert('Please enter a metric name.'); return; }
+    const scope = document.getElementById('addMetricScope').value;
+    const newItem = {
+      id: nextId('SM', SUBMETRICS, 'id'),
+      label, value: document.getElementById('addMetricValue').value.trim(),
+      theme: 'satisfaction', stageId: scope==='stage' ? document.getElementById('addMetricStage').value : null,
+      trend: 'flat', trendGood: false, changeLabel: document.getElementById('addMetricSource').value.trim() || 'Newly added',
+      description: '', relatedGap: null, history: [{date: createdDate, num: parseFloat(document.getElementById('addMetricValue').value) || 0}],
+      uploads: [{date: createdDate, source: document.getElementById('addMetricSource').value.trim() || 'Manually added', uploadedBy: createdBy}],
+      createdBy, createdDate
+    };
+    SUBMETRICS.push(newItem);
+  } else if(type==='opportunity'){
+    const text = document.getElementById('addOppText').value.trim();
+    if(!text){ alert('Please enter the How Might We text.'); return; }
+    const checked = [...document.querySelectorAll('#addOppInsights input:checked')].map(el=>el.value);
+    const newItem = {
+      id: nextId('H', OPPS, 'id'),
+      stage: document.getElementById('addOppStage').value,
+      product: 'Wanderly', highValue: false, text, insights: checked, solution: null,
+      createdBy, createdDate
+    };
+    OPPS.push(newItem);
+  } else if(type==='solution'){
+    const title = document.getElementById('addSolTitle').value.trim();
+    if(!title){ alert('Please enter a title.'); return; }
+    const newItem = {
+      ref: nextId('W', SOLUTIONS, 'ref'),
+      stage: document.getElementById('addSolStage').value,
+      product: 'Wanderly',
+      effort: parseInt(document.getElementById('addSolEffort').value),
+      mv: parseInt(document.getElementById('addSolMv').value),
+      bv: parseInt(document.getElementById('addSolBv').value),
+      road: document.getElementById('addSolRoad').value,
+      isIdea: true, title, summary: document.getElementById('addSolSummary').value.trim(),
+      ratingWhy: '', flags: [], research: null, opps: [], onBoard: false,
+      createdBy, createdDate
+    };
+    SOLUTIONS.push(newItem);
+    solutionByRef[newItem.ref] = newItem;
+  }
+  closeAddModal();
+  render();
+}
+
+// ---- DRAG AND DROP BETWEEN STAGES ----
+// Uses a plain variable rather than the browser's DataTransfer API, since that API
+// behaves inconsistently across browsers for this kind of same-page drag — a simple
+// shared variable is more reliable here.
+let dragData = null;
+function handleDragStart(event, kind, id){
+  dragData = { kind, id };
+  event.dataTransfer.effectAllowed = 'move';
+}
+function handleDragOver(event){
+  event.preventDefault();
+  event.currentTarget.classList.add('drag-over');
+}
+function handleDragLeave(event){
+  event.currentTarget.classList.remove('drag-over');
+}
+function handleDrop(event, newStageId){
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  if(!dragData) return;
+  const { kind, id } = dragData;
+  let item = null;
+  if(kind==='insight') item = insightById[id];
+  else if(kind==='opp') item = oppById[id];
+  else if(kind==='solution') item = solutionByRef[id];
+  else if(kind==='gap') item = GAPS.find(g=>g.id===id);
+  if(!item) return;
+  item.stage = newStageId;
+  dragData = null;
+  render();
+}
