@@ -99,7 +99,6 @@ function openPanel(kind,id,isNavCall){
         <div class="prop-row" id="edit-row-name"><span class="prop-row-label">Name</span><span class="prop-row-val editable-val" onclick="startEditPersonaField('${p.id}','name')">${esc(p.name)} <span class="edit-hint">✎</span></span></div>
         <div class="prop-row" id="edit-row-quote"><span class="prop-row-label">Quote</span><span class="prop-row-val editable-val" onclick="startEditPersonaField('${p.id}','quote')">${esc(p.quote)} <span class="edit-hint">✎</span></span></div>
       </div>
-      <p class="edit-note">Click any value above to change it. This is a live preview of editing, not yet connected to anywhere permanent — refreshing the page brings back the original values.</p>
       <p class="plabel">About me</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.aboutMe.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       <p class="plabel">Needs</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.needs.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       <p class="plabel">Pain points</p><ul style="margin:0 0 14px 18px;padding:0;font-size:13px;color:var(--ink-soft);line-height:1.6">${p.painPoints.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
@@ -178,8 +177,7 @@ function openPanel(kind,id,isNavCall){
       <div class="prop-row" id="edit-row-mv"><span class="prop-row-label">Member value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','mv')">${s.mv}/5 <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-bv"><span class="prop-row-label">Business value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','bv')">${s.bv}/5 <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-road"><span class="prop-row-label">Status</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','road')">${ROAD_LABEL[s.road]} <span class="edit-hint">✎</span></span></div>
-    </div>
-    <p class="edit-note">Click any value above to change it. This is a live preview of editing, not yet connected to anywhere permanent — refreshing the page brings back the original values.</p>`;
+    </div>`;
     const insightCount = new Set((s.opps||[]).flatMap(oid=>(oppById[oid]||{insights:[]}).insights)).size;
     const solGaps = GAPS.filter(g=>g.solution===s.ref);
     const solLinkedSubs = allSubMetrics().filter(sm=>solGaps.some(g=>g.id===sm.relatedGap));
@@ -243,7 +241,7 @@ function startEditPersonaField(id, field){
   const row = document.getElementById('edit-row-'+field);
   const valCell = row.querySelector('.prop-row-val');
   const currentVal = p[field] || '';
-  valCell.innerHTML = `<input type="text" id="editInput-${field}" class="inline-edit-select" value="${esc(currentVal)}" style="width:220px"> <button class="inline-edit-save" onclick="saveEditPersonaField('${id}','${field}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('persona','${id}')">Cancel</button>`;
+  valCell.innerHTML = `<div class="inline-edit-row"><input type="text" id="editInput-${field}" class="inline-edit-select" value="${esc(currentVal)}" style="width:200px;flex-shrink:0"><button class="inline-edit-save" onclick="saveEditPersonaField('${id}','${field}')">Save</button><button class="inline-edit-cancel" onclick="openPanel('persona','${id}')">Cancel</button></div>`;
   valCell.onclick = null;
 }
 function saveEditPersonaField(id, field){
@@ -264,7 +262,7 @@ function startEditSolutionField(ref, field){
   else if(field==='mv' || field==='bv'){ currentVal=s[field]; options=[1,2,3,4,5].map(n=>({v:n, l:n+'/5'})); }
   else if(field==='road'){ currentVal=s.road; options=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>({v:r, l:ROAD_LABEL[r]})); }
   const optionsHtml = options.map(o=>`<div class="fdropdown-option${o.v===currentVal?' checked':''}" onclick="event.stopPropagation(); saveEditSolutionField('${ref}','${field}','${o.v}')"><span>${esc(String(o.l))}</span></div>`).join('');
-  valCell.innerHTML = `<div class="fdropdown" style="display:inline-block"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')">${esc(String(field==='road'?ROAD_LABEL[currentVal]:field==='effort'?EFFORT_LABEL[currentVal]:currentVal+'/5'))} <span class="chev"></span></button><div class="fdropdown-panel open">${optionsHtml}</div></div> <button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button>`;
+  valCell.innerHTML = `<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')">${esc(String(field==='road'?ROAD_LABEL[currentVal]:field==='effort'?EFFORT_LABEL[currentVal]:currentVal+'/5'))} <span class="chev"></span></button><div class="fdropdown-panel open">${optionsHtml}</div></div><button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button></div>`;
 }
 function saveEditSolutionField(ref, field, rawValue){
   const s = solutionByRef[ref]; if(!s) return;

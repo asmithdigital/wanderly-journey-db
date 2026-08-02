@@ -205,7 +205,9 @@ body.has-selection .bubble.selected .bubble-ring{stroke-width:3.5}
 .ptab{font-size:12.5px;padding:9px 4px;margin-right:18px;border:none;background:transparent;color:var(--ink-faint);cursor:pointer;font-weight:500;font-family:var(--sans);border-bottom:2px solid transparent}
 .ptab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 .prop-list{border-top:1px solid var(--line);margin-top:14px;padding-top:2px}
-.prop-row{display:grid;grid-template-columns:150px 1fr;align-items:center;column-gap:20px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.prop-row{display:grid;grid-template-columns:110px 1fr;align-items:center;column-gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.prop-row-val{white-space:nowrap}
+.editable-val{display:inline-flex;align-items:center;gap:5px}
 .prop-row:last-child{border-bottom:none}
 .prop-row-label{color:var(--ink-soft);font-weight:500}
 .prop-row-val{font-weight:600;color:var(--ink);text-align:left}
@@ -338,10 +340,11 @@ button *,[onclick] *,.mini-card *,.link-item-row *,.bubble *,.fdropdown-trigger 
 .bp-connector{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:20px;font-weight:800;line-height:1;padding:2px 0;position:relative}
 .bp-connector::before{content:'';position:absolute;top:-9px;bottom:calc(100% - 2px);width:2px;background:var(--accent);left:50%;transform:translateX(-50%)}
 /* Inline editing preview — not yet connected to anywhere permanent */
-.editable-val{cursor:pointer;border-bottom:1px dashed var(--ink-faint)}
+.editable-val{cursor:pointer;border-bottom:1px dashed var(--ink-faint);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .editable-val:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .edit-hint{font-size:10px;opacity:.5}
-.edit-note{font-size:11px;color:var(--ink-faint);font-style:italic;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.inline-edit-row{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
 .inline-edit-select{font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font-family:var(--sans)}
 .inline-edit-save{font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;margin-left:4px}
 .inline-edit-cancel{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;margin-left:4px}
+.inline-edit-row{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
