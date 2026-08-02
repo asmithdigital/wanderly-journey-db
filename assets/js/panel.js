@@ -258,19 +258,18 @@ function startEditSolutionField(ref, field){
   const s = solutionByRef[ref]; if(!s) return;
   const row = document.getElementById('edit-row-'+field);
   const valCell = row.querySelector('.prop-row-val');
-  let optionsHtml, currentVal;
-  if(field==='effort'){ currentVal=s.effort; optionsHtml=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===currentVal?'selected':''}>${EFFORT_LABEL[n]}</option>`).join(''); }
-  else if(field==='mv' || field==='bv'){ currentVal=s[field]; optionsHtml=[1,2,3,4,5].map(n=>`<option value="${n}" ${n===currentVal?'selected':''}>${n}/5</option>`).join(''); }
-  else if(field==='road'){ currentVal=s.road; optionsHtml=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>`<option value="${r}" ${r===currentVal?'selected':''}>${ROAD_LABEL[r]}</option>`).join(''); }
-  valCell.innerHTML = `<select id="editSelect-${field}" class="inline-edit-select">${optionsHtml}</select> <button class="inline-edit-save" onclick="saveEditSolutionField('${ref}','${field}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button>`;
   valCell.onclick = null;
+  let options, currentVal;
+  if(field==='effort'){ currentVal=s.effort; options=[1,2,3,4,5].map(n=>({v:n, l:EFFORT_LABEL[n]})); }
+  else if(field==='mv' || field==='bv'){ currentVal=s[field]; options=[1,2,3,4,5].map(n=>({v:n, l:n+'/5'})); }
+  else if(field==='road'){ currentVal=s.road; options=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>({v:r, l:ROAD_LABEL[r]})); }
+  const optionsHtml = options.map(o=>`<div class="fdropdown-option${o.v===currentVal?' checked':''}" onclick="event.stopPropagation(); saveEditSolutionField('${ref}','${field}','${o.v}')"><span>${esc(String(o.l))}</span></div>`).join('');
+  valCell.innerHTML = `<div class="fdropdown" style="display:inline-block"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')">${esc(String(field==='road'?ROAD_LABEL[currentVal]:field==='effort'?EFFORT_LABEL[currentVal]:currentVal+'/5'))} <span class="chev"></span></button><div class="fdropdown-panel open">${optionsHtml}</div></div> <button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button>`;
 }
-function saveEditSolutionField(ref, field){
+function saveEditSolutionField(ref, field, rawValue){
   const s = solutionByRef[ref]; if(!s) return;
-  const select = document.getElementById('editSelect-'+field);
-  const raw = select.value;
-  if(field==='road') s.road = raw;
-  else s[field] = parseInt(raw);
+  if(field==='road') s.road = rawValue;
+  else s[field] = parseInt(rawValue);
   // Updates the in-memory copy only — nothing is written anywhere permanent yet.
   // This is a live preview of the editing interaction, refreshing the page reloads
   // the original data/journey-data.json and this change disappears.
