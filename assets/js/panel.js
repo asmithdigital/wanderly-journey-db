@@ -82,6 +82,7 @@ function openPanel(kind,id,isNavCall){
   }
   if(kind==='persona'){
     const p=PERSONAS.find(x=>x.id===id); if(!p) return;
+    if(panelEditMode){ renderPersonaEditMode(p); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${p.bg};color:${p.color}">${p.product} persona</span>`;
     document.getElementById('panelTitle').textContent = p.name;
     document.getElementById('panelSub').textContent = `"${p.quote}"`;
@@ -119,6 +120,7 @@ function openPanel(kind,id,isNavCall){
   }
   if(kind==='insight'){
     const i=insightById[id]; if(!i) return;
+    if(panelEditMode){ renderInsightEditMode(i); return; }
     const typeColor={pain:['var(--pain)','var(--pain-bg)'],delight:['var(--delight)','var(--delight-bg)'],observation:['var(--obs)','var(--obs-bg)']}[i.type];
     const oppCount=OPPS.filter(o=>o.insights.includes(i.id)).length;
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${typeColor[1]};color:${typeColor[0]}">${i.type}</span><span class="badge" style="background:${PROD_BG[i.product]};color:${PROD_COLOR[i.product]}">${i.product}</span>${i.analytics?'<span class="badge" style="background:var(--pain-bg);color:var(--pain)">Analytics supported</span>':''}`;
@@ -156,6 +158,7 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='opp'){
     const o=oppById[id]; if(!o) return;
+    if(panelEditMode){ renderOppEditMode(o); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:var(--hmw-bg);color:var(--hmw)">Opportunity</span><span class="badge" style="background:${PROD_BG[o.product]};color:${PROD_COLOR[o.product]}">${o.product}</span>${o.highValue?'<span class="badge" style="background:var(--hmw-bg);color:var(--hmw)">Big win</span>':''}`;
     document.getElementById('panelTitle').innerHTML=`<span class="editable-val" id="edit-text-wrap" onclick="startEditOppText('${o.id}')">${esc(o.text)} <span class="edit-hint">✎</span></span>`;
     document.getElementById('panelSub').textContent = (STAGES.find(s=>s.id===o.stage)||{}).name + ' stage · Opportunity';
@@ -177,6 +180,7 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='solution'){
     const s=solutionByRef[id]; if(!s) return;
+    if(panelEditMode){ renderSolutionEditMode(s); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${PROD_BG[s.product]};color:${PROD_COLOR[s.product]}">${s.product}</span><span class="badge" style="background:${ROAD_BG[s.road]};color:${ROAD_COLOR[s.road]}">${ROAD_LABEL[s.road]}</span>${s.isIdea?'<span class="badge" style="background:var(--idea-bg);color:var(--idea)">💡 Idea — not from research</span>':''}${s.onBoard?'<span class="badge" style="background:var(--delivery-bg);color:var(--delivery)">On Miro board</span>':''}`;
     document.getElementById('panelSub').textContent = (STAGES.find(st=>st.id===s.stage)||{}).name + ' stage · Solution';
     const pr = computePriority(s);
@@ -218,6 +222,7 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='gap'){
     const g=GAPS.find(x=>x.id===id); if(!g) return;
+    if(panelEditMode){ renderGapEditMode(g); return; }
     const vBg=g.verdict==='genuine'?'var(--gap-bg)':g.verdict==='partial'?'var(--hold-bg)':'var(--delivery-bg)';
     const vC=g.verdict==='genuine'?'var(--gap)':g.verdict==='partial'?'var(--hold)':'var(--delivery)';
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${vBg};color:${vC}">${VERDICT_LABEL[g.verdict]}</span><span class="badge" style="background:${PROD_BG[g.product]};color:${PROD_COLOR[g.product]}">${g.product}</span>`;
@@ -249,6 +254,33 @@ function openPanel(kind,id,isNavCall){
   document.getElementById('panel').classList.add('open');
 }
 
+function renderGapEditMode(g){
+  document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing gap</span>`;
+  document.getElementById('panelSub').textContent = '';
+  document.getElementById('panelTitle').innerHTML = '';
+  document.getElementById('panelScores').innerHTML = '';
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="add-field"><label>Gap title</label><input type="text" id="em-gapTitle" value="${esc(g.gapTitle)}"></div>
+    <div class="add-field"><label>The figure</label><input type="text" id="em-figure" value="${esc(g.figure)}"></div>
+    <div class="add-field"><label>Which stage?</label><select id="em-stage">${stageOptionsHtml(g.stage)}</select></div>
+    <div class="add-field"><label>Verdict</label><select id="em-verdict"><option value="genuine" ${g.verdict==='genuine'?'selected':''}>Genuine gap</option><option value="partial" ${g.verdict==='partial'?'selected':''}>Partially explained</option><option value="well" ${g.verdict==='well'?'selected':''}>Well explained</option></select></div>
+    <div class="add-field"><label>What the journey map says at this stage</label><textarea id="em-mapSays" rows="3">${esc(g.mapSays||'')}</textarea></div>
+    <div class="add-field"><label>Source document name</label><input type="text" id="em-docName" value="${esc(g.docName||'')}"></div>
+    <div class="add-field"><label>Discovery opportunity note (optional)</label><textarea id="em-discoveryNote" rows="2">${esc(g.discoveryNote||'')}</textarea></div>
+    <button class="add-modal-save" onclick="saveGapEditMode('${g.id}')">Save all changes</button>`;
+}
+function saveGapEditMode(id){
+  const g = GAPS.find(x=>x.id===id); if(!g) return;
+  g.gapTitle = document.getElementById('em-gapTitle').value;
+  g.figure = document.getElementById('em-figure').value;
+  g.stage = document.getElementById('em-stage').value;
+  g.verdict = document.getElementById('em-verdict').value;
+  g.mapSays = document.getElementById('em-mapSays').value;
+  g.docName = document.getElementById('em-docName').value;
+  g.discoveryNote = document.getElementById('em-discoveryNote').value;
+  openPanel('gap', id, true);
+  render();
+}
 function startEditGapText(id, field){
   const g = GAPS.find(x=>x.id===id); if(!g) return;
   const wrapId = field==='gapTitle' ? 'edit-text-wrap' : 'edit-figure-wrap';
@@ -275,6 +307,35 @@ function saveEditGapVerdict(id, newVerdict){
   const g = GAPS.find(x=>x.id===id); if(!g) return;
   g.verdict = newVerdict;
   openPanel('gap', id);
+  render();
+}
+function renderPersonaEditMode(p){
+  document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing persona</span>`;
+  document.getElementById('panelSub').textContent = '';
+  document.getElementById('panelTitle').innerHTML = '';
+  document.getElementById('panelScores').innerHTML = '';
+  document.getElementById('panelThumb').style.display = 'none';
+  document.getElementById('panelHead').style.paddingRight = '';
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="add-field"><label>Name</label><input type="text" id="em-name" value="${esc(p.name)}"></div>
+    <div class="add-field"><label>Quote</label><textarea id="em-quote" rows="2">${esc(p.quote)}</textarea></div>
+    <div class="add-field"><label>About me — one per line</label><textarea id="em-aboutMe" rows="3">${p.aboutMe.map(esc).join('\n')}</textarea></div>
+    <div class="add-field"><label>Needs — one per line</label><textarea id="em-needs" rows="3">${p.needs.map(esc).join('\n')}</textarea></div>
+    <div class="add-field"><label>Pain points — one per line</label><textarea id="em-painPoints" rows="3">${p.painPoints.map(esc).join('\n')}</textarea></div>
+    <div class="add-field"><label>Goals — one per line</label><textarea id="em-goals" rows="2">${p.goals.map(esc).join('\n')}</textarea></div>
+    <div class="add-field"><label>Scenario</label><textarea id="em-scenario" rows="2">${esc(p.scenario)}</textarea></div>
+    <button class="add-modal-save" onclick="savePersonaEditMode('${p.id}')">Save all changes</button>`;
+}
+function savePersonaEditMode(id){
+  const p = PERSONAS.find(x=>x.id===id); if(!p) return;
+  p.name = document.getElementById('em-name').value;
+  p.quote = document.getElementById('em-quote').value;
+  p.aboutMe = document.getElementById('em-aboutMe').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  p.needs = document.getElementById('em-needs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  p.painPoints = document.getElementById('em-painPoints').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  p.goals = document.getElementById('em-goals').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  p.scenario = document.getElementById('em-scenario').value;
+  openPanel('persona', id, true);
   render();
 }
 function startEditPersonaList(id, field){
@@ -348,6 +409,28 @@ function saveSolutionOpp(ref){
   openPanel('solution', ref);
   render();
 }
+function renderOppEditMode(o){
+  document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing opportunity</span>`;
+  document.getElementById('panelSub').textContent = '';
+  document.getElementById('panelTitle').innerHTML = '';
+  document.getElementById('panelScores').innerHTML = '';
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="add-field"><label>How Might We...?</label><textarea id="em-text" rows="2">${esc(o.text)}</textarea></div>
+    <div class="add-field"><label>Which stage?</label><select id="em-stage">${stageOptionsHtml(o.stage)}</select></div>
+    <div class="add-field"><label>Product</label><select id="em-product"><option value="Wanderly" ${o.product==='Wanderly'?'selected':''}>Wanderly</option></select></div>
+    <div class="add-field"><label><input type="checkbox" id="em-highvalue" ${o.highValue?'checked':''} style="width:auto;margin-right:6px"> Mark as a big win opportunity</label></div>
+    <button class="add-modal-save" onclick="saveOppEditMode('${o.id}')">Save all changes</button>
+    <p class="edit-note" style="margin-top:14px">Related insights are still edited from the Insights tab above.</p>`;
+}
+function saveOppEditMode(id){
+  const o = oppById[id]; if(!o) return;
+  o.text = document.getElementById('em-text').value;
+  o.stage = document.getElementById('em-stage').value;
+  o.product = document.getElementById('em-product').value;
+  o.highValue = document.getElementById('em-highvalue').checked;
+  openPanel('opp', id, true);
+  render();
+}
 function startEditOppText(id){
   const o = oppById[id]; if(!o) return;
   const wrap = document.getElementById('edit-text-wrap');
@@ -366,16 +449,90 @@ function saveEditOppText(id){
 function startEditOppInsights(id){
   const o = oppById[id]; if(!o) return;
   const view = document.getElementById('opp-insights-view');
-  const checklist = INSIGHTS.map(i=>`<label><input type="checkbox" value="${i.id}" ${o.insights.includes(i.id)?'checked':''}> <span class="tiny-pill" style="background:${i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)'};color:${i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)'}">${i.type}</span> ${esc(i.text.slice(0,60))}${i.text.length>60?'…':''}</label>`).join('');
   view.innerHTML = `
     <p class="plabel">Which insights relate to this opportunity?</p>
-    <div class="add-checklist" id="oppInsightsChecklist" style="max-height:220px">${checklist || '<span class="empty-note">No insights exist yet.</span>'}</div>
-    <div style="margin-top:10px"><button class="inline-edit-save" onclick="saveOppInsights('${id}')">Save</button> <button class="inline-edit-cancel" onclick="openPanel('opp','${id}')">Cancel</button></div>`;
+    <div id="oppInsightsAutocomplete"></div>
+    <div style="margin-top:10px"><button class="inline-edit-cancel" onclick="openPanel('opp','${id}')">Done</button></div>`;
+  renderInsightAutocomplete('oppInsightsAutocomplete', o.insights, function(newIds){ o.insights = newIds; render(); });
 }
-function saveOppInsights(id){
-  const o = oppById[id]; if(!o) return;
-  o.insights = [...document.querySelectorAll('#oppInsightsChecklist input:checked')].map(el=>el.value);
-  openPanel('opp', id);
+// A small, reusable searchable picker: shows selected items as removable chips, and up to 6
+// matching suggestions as soon as the field is focused or typed into, rather than one long
+// scrollable list of everything.
+function renderInsightAutocomplete(containerId, selectedIds, onChange){
+  const container = document.getElementById(containerId);
+  function draw(query){
+    const q = (query||'').toLowerCase();
+    const matches = INSIGHTS.filter(function(i){ return i.text.toLowerCase().indexOf(q) !== -1; }).slice(0, 6);
+    const chips = selectedIds.map(function(sid){
+      const i = insightById[sid]; if(!i) return '';
+      return '<span class="ac-chip">' + esc(i.text.slice(0,40)) + (i.text.length>40?'…':'') + '<span class="ac-chip-x" onclick="event.stopPropagation(); removeAutocompleteItem(\''+containerId+'\',\''+sid+'\')">×</span></span>';
+    }).join('');
+    const suggestions = matches.map(function(i){
+      const already = selectedIds.indexOf(i.id) !== -1;
+      return '<div class="ac-suggestion' + (already?' ac-suggestion-selected':'') + '" onmousedown="event.preventDefault(); toggleAutocompleteItem(\'' + containerId + '\',\'' + i.id + '\')">' +
+        '<span class="tiny-pill" style="background:' + (i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)') + ';color:' + (i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)') + '">' + i.type + '</span> ' +
+        esc(i.text.slice(0,70)) + (i.text.length>70?'…':'') + (already ? ' <span class="ac-check">✓</span>' : '') +
+        '</div>';
+    }).join('') || '<div class="ac-suggestion" style="color:var(--ink-faint);font-style:italic">No matches</div>';
+    container.innerHTML = '<div class="ac-chips">' + chips + '</div>' +
+      '<input type="text" class="ac-input" placeholder="Search insights..." oninput="renderInsightAutocompleteFilter(\'' + containerId + '\', this.value)" onfocus="renderInsightAutocompleteFilter(\'' + containerId + '\', this.value)">' +
+      '<div class="ac-suggestions">' + suggestions + '</div>';
+  }
+  container._acDraw = draw;
+  container._acSelected = selectedIds;
+  container._acOnChange = onChange;
+  draw('');
+}
+function renderInsightAutocompleteFilter(containerId, query){
+  const container = document.getElementById(containerId);
+  const q = (query||'').toLowerCase();
+  const matches = INSIGHTS.filter(function(i){ return i.text.toLowerCase().indexOf(q) !== -1; }).slice(0, 6);
+  const suggestionsHtml = matches.map(function(i){
+    const already = container._acSelected.indexOf(i.id) !== -1;
+    return '<div class="ac-suggestion' + (already?' ac-suggestion-selected':'') + '" onmousedown="event.preventDefault(); toggleAutocompleteItem(\'' + containerId + '\',\'' + i.id + '\')">' +
+      '<span class="tiny-pill" style="background:' + (i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)') + ';color:' + (i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)') + '">' + i.type + '</span> ' +
+      esc(i.text.slice(0,70)) + (i.text.length>70?'…':'') + (already ? ' <span class="ac-check">✓</span>' : '') +
+      '</div>';
+  }).join('') || '<div class="ac-suggestion" style="color:var(--ink-faint);font-style:italic">No matches</div>';
+  container.querySelector('.ac-suggestions').innerHTML = suggestionsHtml;
+}
+function toggleAutocompleteItem(containerId, insightId){
+  const container = document.getElementById(containerId);
+  const idx = container._acSelected.indexOf(insightId);
+  if(idx === -1) container._acSelected.push(insightId);
+  else container._acSelected.splice(idx, 1);
+  container._acOnChange(container._acSelected.slice());
+  const inputVal = container.querySelector('.ac-input') ? container.querySelector('.ac-input').value : '';
+  container._acDraw(inputVal);
+  const freshInput = container.querySelector('.ac-input');
+  if(freshInput){ freshInput.value = inputVal; freshInput.focus(); }
+}
+function removeAutocompleteItem(containerId, insightId){
+  toggleAutocompleteItem(containerId, insightId);
+}
+function renderInsightEditMode(i){
+  document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing insight</span>`;
+  document.getElementById('panelSub').textContent = '';
+  document.getElementById('panelTitle').innerHTML = '';
+  document.getElementById('panelScores').innerHTML = '';
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="add-field"><label>What did someone say or notice?</label><textarea id="em-text" rows="2">${esc(i.text)}</textarea></div>
+    <div class="add-field"><label>Type</label><select id="em-type"><option value="pain" ${i.type==='pain'?'selected':''}>Pain point</option><option value="delight" ${i.type==='delight'?'selected':''}>Delight</option><option value="observation" ${i.type==='observation'?'selected':''}>Observation</option></select></div>
+    <div class="add-field"><label>Which stage?</label><select id="em-stage">${stageOptionsHtml(i.stage)}</select></div>
+    <div class="add-field"><label>Product</label><select id="em-product"><option value="Wanderly" ${i.product==='Wanderly'?'selected':''}>Wanderly</option></select></div>
+    <div class="add-field"><label>Link to journey map or research</label><input type="text" id="em-link" value="${esc(i.link||'')}"></div>
+    <div class="add-field"><label><input type="checkbox" id="em-analytics" ${i.analytics?'checked':''} style="width:auto;margin-right:6px"> Backed by analytics data, not just this one account</label></div>
+    <button class="add-modal-save" onclick="saveInsightEditMode('${i.id}')">Save all changes</button>`;
+}
+function saveInsightEditMode(id){
+  const i = insightById[id]; if(!i) return;
+  i.text = document.getElementById('em-text').value;
+  i.type = document.getElementById('em-type').value;
+  i.stage = document.getElementById('em-stage').value;
+  i.product = document.getElementById('em-product').value;
+  i.link = document.getElementById('em-link').value;
+  i.analytics = document.getElementById('em-analytics').checked;
+  openPanel('insight', id, true);
   render();
 }
 function startEditInsightText(id){
@@ -418,6 +575,40 @@ function saveEditInsightType(id, newType){
   const i = insightById[id]; if(!i) return;
   i.type = newType;
   openPanel('insight', id);
+  render();
+}
+function renderSolutionEditMode(s){
+  document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing ${s.ref}</span>`;
+  document.getElementById('panelSub').textContent = '';
+  document.getElementById('panelTitle').innerHTML = '';
+  document.getElementById('panelScores').innerHTML = '';
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="add-field"><label>Title</label><input type="text" id="em-title" value="${esc(s.title)}"></div>
+    <div class="add-field"><label>Summary</label><textarea id="em-summary" rows="3">${esc(s.summary)}</textarea></div>
+    <div class="add-field"><label>Which stage?</label><select id="em-stage">${stageOptionsHtml(s.stage)}</select></div>
+    <div class="add-field"><label>Product</label><select id="em-product"><option value="Wanderly" ${s.product==='Wanderly'?'selected':''}>Wanderly</option></select></div>
+    <div style="display:flex;gap:10px">
+      <div class="add-field" style="flex:1"><label>Effort</label><select id="em-effort">${[1,2,3,4,5].map(n=>`<option value="${n}" ${s.effort===n?'selected':''}>${EFFORT_LABEL[n]}</option>`).join('')}</select></div>
+      <div class="add-field" style="flex:1"><label>Member value</label><select id="em-mv">${[1,2,3,4,5].map(n=>`<option value="${n}" ${s.mv===n?'selected':''}>${n}/5</option>`).join('')}</select></div>
+      <div class="add-field" style="flex:1"><label>Business value</label><select id="em-bv">${[1,2,3,4,5].map(n=>`<option value="${n}" ${s.bv===n?'selected':''}>${n}/5</option>`).join('')}</select></div>
+    </div>
+    <div class="add-field"><label>Status</label><select id="em-road">${['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>`<option value="${r}" ${s.road===r?'selected':''}>${ROAD_LABEL[r]}</option>`).join('')}</select></div>
+    <div class="add-field"><label>Why I rated it this way</label><textarea id="em-ratingWhy" rows="2">${esc(s.ratingWhy||'')}</textarea></div>
+    <button class="add-modal-save" onclick="saveSolutionEditMode('${s.ref}')">Save all changes</button>
+    <p class="edit-note" style="margin-top:14px">Related insights, opportunities, and metrics are still edited from their own tabs above.</p>`;
+}
+function saveSolutionEditMode(ref){
+  const s = solutionByRef[ref]; if(!s) return;
+  s.title = document.getElementById('em-title').value;
+  s.summary = document.getElementById('em-summary').value;
+  s.stage = document.getElementById('em-stage').value;
+  s.product = document.getElementById('em-product').value;
+  s.effort = parseInt(document.getElementById('em-effort').value);
+  s.mv = parseInt(document.getElementById('em-mv').value);
+  s.bv = parseInt(document.getElementById('em-bv').value);
+  s.road = document.getElementById('em-road').value;
+  s.ratingWhy = document.getElementById('em-ratingWhy').value;
+  openPanel('solution', ref, true);
   render();
 }
 function startEditSolutionText(ref, field){
@@ -465,12 +656,23 @@ function saveEditSolutionField(ref, field, rawValue){
   openPanel('solution', ref);
   render();
 }
+let panelEditMode = false;
+function togglePanelEditMode(){
+  panelEditMode = !panelEditMode;
+  const btn = document.getElementById('panelEditToggle');
+  btn.classList.toggle('active', panelEditMode);
+  btn.textContent = panelEditMode ? '✓ Done' : '✎ Edit';
+  if(currentPanelKind && currentPanelId) openPanel(currentPanelKind, currentPanelId, true);
+}
 function closePanel(){
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
   panelHistory=[]; currentPanelKind=null; currentPanelId=null;
   document.body.classList.remove('has-selection');
   clearSelection(); selectedKey=null;
+  panelEditMode = false;
+  const btn = document.getElementById('panelEditToggle');
+  if(btn){ btn.classList.remove('active'); btn.textContent = '✎ Edit'; }
 }
 
 function switchTab(t){

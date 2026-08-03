@@ -653,3 +653,78 @@ function handleDrop(event, newStageId){
   dragData = null;
   render();
 }
+
+// ---- POINTER-BASED DRAG AND DROP ----
+// Rebuilt using plain mouse events instead of the browser's native HTML5 drag-and-drop,
+// which turned out not to work reliably. This version tracks the mouse directly, so it
+// isn't dependent on any particular browser's drag implementation.
+let justDragged = false;
+let dragState = null;
+function startCardDrag(event, kind, id){
+  if(event.button !== 0) return; // left click only
+  const card = event.currentTarget;
+  const rect = card.getBoundingClientRect();
+  dragState = {
+    kind, id, card,
+    startX: event.clientX, startY: event.clientY,
+    offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top,
+    ghost: null, moved: false
+  };
+  document.addEventListener('mousemove', onCardDragMove);
+  document.addEventListener('mouseup', onCardDragEnd);
+}
+function onCardDragMove(event){
+  if(!dragState) return;
+  const dx = event.clientX - dragState.startX, dy = event.clientY - dragState.startY;
+  if(!dragState.moved && Math.abs(dx) < 5 && Math.abs(dy) < 5) return; // small movements are just clicks, not drags
+  if(!dragState.moved){
+    dragState.moved = true;
+    justDragged = true;
+    const rect = dragState.card.getBoundingClientRect();
+    const ghost = dragState.card.cloneNode(true);
+    ghost.style.position = 'fixed';
+    ghost.style.width = rect.width + 'px';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.opacity = '0.85';
+    ghost.style.zIndex = '9999';
+    ghost.style.boxShadow = '0 8px 24px rgba(0,0,0,.25)';
+    ghost.style.transform = 'rotate(-1deg)';
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+    dragState.card.style.opacity = '0.3';
+    document.querySelectorAll('.lane-cell').forEach(c=>{ if(c.getAttribute('ondrop')) c.classList.add('drag-target-available'); });
+  }
+  dragState.ghost.style.left = (event.clientX - dragState.offsetX) + 'px';
+  dragState.ghost.style.top = (event.clientY - dragState.offsetY) + 'px';
+  document.querySelectorAll('.lane-cell.drag-over').forEach(c=>c.classList.remove('drag-over'));
+  const under = document.elementFromPoint(event.clientX, event.clientY);
+  const cell = under ? under.closest('.lane-cell') : null;
+  if(cell && cell.getAttribute('ondrop')) cell.classList.add('drag-over');
+}
+function onCardDragEnd(event){
+  document.removeEventListener('mousemove', onCardDragMove);
+  document.removeEventListener('mouseup', onCardDragEnd);
+  if(!dragState) return;
+  const wasMoved = dragState.moved;
+  if(dragState.ghost) dragState.ghost.remove();
+  dragState.card.style.opacity = '';
+  document.querySelectorAll('.lane-cell.drag-over, .lane-cell.drag-target-available').forEach(c=>c.classList.remove('drag-over','drag-target-available'));
+
+  if(wasMoved){
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    const cell = under ? under.closest('.lane-cell') : null;
+    const dropAttr = cell ? cell.getAttribute('ondrop') : null;
+    const match = dropAttr ? dropAttr.match(/handleDrop\(event,'([^']+)'\)/) : null;
+    if(match){
+      const newStageId = match[1];
+      let item = null;
+      if(dragState.kind==='insight') item = insightById[dragState.id];
+      else if(dragState.kind==='opp') item = oppById[dragState.id];
+      else if(dragState.kind==='solution') item = solutionByRef[dragState.id];
+      else if(dragState.kind==='gap') item = GAPS.find(g=>g.id===dragState.id);
+      if(item){ item.stage = newStageId; render(); }
+    }
+  }
+  dragState = null;
+  setTimeout(()=>{ justDragged = false; }, 50); // give the click handler a moment to see this was a drag, not a click
+}
