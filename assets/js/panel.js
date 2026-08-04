@@ -82,7 +82,6 @@ function openPanel(kind,id,isNavCall){
   }
   if(kind==='persona'){
     const p=PERSONAS.find(x=>x.id===id); if(!p) return;
-    if(panelEditMode){ renderPersonaEditMode(p); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${p.bg};color:${p.color}">${p.product} persona</span>`;
     document.getElementById('panelTitle').textContent = p.name;
     document.getElementById('panelSub').textContent = `"${p.quote}"`;
@@ -120,7 +119,6 @@ function openPanel(kind,id,isNavCall){
   }
   if(kind==='insight'){
     const i=insightById[id]; if(!i) return;
-    if(panelEditMode){ renderInsightEditMode(i); return; }
     const typeColor={pain:['var(--pain)','var(--pain-bg)'],delight:['var(--delight)','var(--delight-bg)'],observation:['var(--obs)','var(--obs-bg)']}[i.type];
     const oppCount=OPPS.filter(o=>o.insights.includes(i.id)).length;
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${typeColor[1]};color:${typeColor[0]}">${i.type}</span><span class="badge" style="background:${PROD_BG[i.product]};color:${PROD_COLOR[i.product]}">${i.product}</span>${i.analytics?'<span class="badge" style="background:var(--pain-bg);color:var(--pain)">Analytics supported</span>':''}`;
@@ -128,8 +126,9 @@ function openPanel(kind,id,isNavCall){
     document.getElementById('panelSub').textContent = (STAGES.find(s=>s.id===i.stage)||{}).name + ' stage · Insight';
     document.getElementById('panelScores').innerHTML=`<div class="prop-list">
       <div class="prop-row" id="edit-row-type"><span class="prop-row-label">Type</span><span class="prop-row-val editable-val" onclick="startEditInsightType('${i.id}')">${i.type} <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-stage"><span class="prop-row-label">Stage</span><span class="prop-row-val editable-val" onclick="startEditInsightStage('${i.id}')">${esc((STAGES.find(st=>st.id===i.stage)||{}).name||i.stage)} <span class="edit-hint">✎</span></span></div>
       <div class="prop-row"><span class="prop-row-label">Product</span><span class="prop-row-val">${i.product}</span></div>
-      <div class="prop-row"><span class="prop-row-label">Analytics supported</span><span class="prop-row-val">${i.analytics?'Yes':'No'}</span></div>
+      <div class="prop-row" id="edit-row-analytics"><span class="prop-row-label">Analytics supported</span><span class="prop-row-val editable-val" onclick="toggleInsightAnalytics('${i.id}')">${i.analytics?'Yes':'No'} <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-link"><span class="prop-row-label">Link</span><span class="prop-row-val editable-val" onclick="startEditInsightLink('${i.id}')">${i.link && i.link!=='#' ? esc(i.link.slice(0,30))+'…' : 'None yet'} <span class="edit-hint">✎</span></span></div>
     </div>`;
     const siblingIds = siblingInsightIdsFor(i);
@@ -158,14 +157,14 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='opp'){
     const o=oppById[id]; if(!o) return;
-    if(panelEditMode){ renderOppEditMode(o); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:var(--hmw-bg);color:var(--hmw)">Opportunity</span><span class="badge" style="background:${PROD_BG[o.product]};color:${PROD_COLOR[o.product]}">${o.product}</span>${o.highValue?'<span class="badge" style="background:var(--hmw-bg);color:var(--hmw)">Big win</span>':''}`;
     document.getElementById('panelTitle').innerHTML=`<span class="editable-val" id="edit-text-wrap" onclick="startEditOppText('${o.id}')">${esc(o.text)} <span class="edit-hint">✎</span></span>`;
     document.getElementById('panelSub').textContent = (STAGES.find(s=>s.id===o.stage)||{}).name + ' stage · Opportunity';
     document.getElementById('panelScores').innerHTML=`<div class="prop-list">
       <div class="prop-row"><span class="prop-row-label">Status</span><span class="prop-row-val">Open</span></div>
+      <div class="prop-row" id="edit-row-oppstage"><span class="prop-row-label">Stage</span><span class="prop-row-val editable-val" onclick="startEditOppStage('${o.id}')">${esc((STAGES.find(st=>st.id===o.stage)||{}).name||o.stage)} <span class="edit-hint">✎</span></span></div>
       <div class="prop-row"><span class="prop-row-label">Product</span><span class="prop-row-val">${o.product}</span></div>
-      <div class="prop-row"><span class="prop-row-label">Big win</span><span class="prop-row-val">${o.highValue?'Yes':'No'}</span></div>
+      <div class="prop-row" id="edit-row-highvalue"><span class="prop-row-label">Big win</span><span class="prop-row-val editable-val" onclick="toggleOppHighValue('${o.id}')">${o.highValue?'Yes':'No'} <span class="edit-hint">✎</span></span></div>
     </div>`;
     allTabs[2].textContent=`Insights (${o.insights.length})`; allTabs[2].style.display='inline';
     allTabs[4].textContent=`Solutions (${o.solution?1:0})`; allTabs[4].style.display='inline';
@@ -180,7 +179,6 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='solution'){
     const s=solutionByRef[id]; if(!s) return;
-    if(panelEditMode){ renderSolutionEditMode(s); return; }
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${PROD_BG[s.product]};color:${PROD_COLOR[s.product]}">${s.product}</span><span class="badge" style="background:${ROAD_BG[s.road]};color:${ROAD_COLOR[s.road]}">${ROAD_LABEL[s.road]}</span>${s.isIdea?'<span class="badge" style="background:var(--idea-bg);color:var(--idea)">💡 Idea — not from research</span>':''}${s.onBoard?'<span class="badge" style="background:var(--delivery-bg);color:var(--delivery)">On Miro board</span>':''}`;
     document.getElementById('panelSub').textContent = (STAGES.find(st=>st.id===s.stage)||{}).name + ' stage · Solution';
     const pr = computePriority(s);
@@ -190,6 +188,7 @@ function openPanel(kind,id,isNavCall){
       <div class="prop-row" id="edit-row-mv"><span class="prop-row-label">Member value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','mv')">${s.mv}/5 <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-bv"><span class="prop-row-label">Business value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','bv')">${s.bv}/5 <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-road"><span class="prop-row-label">Status</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','road')">${ROAD_LABEL[s.road]} <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-stage"><span class="prop-row-label">Stage</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','stage')">${esc((STAGES.find(st=>st.id===s.stage)||{}).name||s.stage)} <span class="edit-hint">✎</span></span></div>
     </div>`;
     const insightCount = new Set((s.opps||[]).flatMap(oid=>(oppById[oid]||{insights:[]}).insights).concat(s.relatedInsightIds||[])).size;
     const solGaps = GAPS.filter(g=>g.solution===s.ref);
@@ -204,7 +203,7 @@ function openPanel(kind,id,isNavCall){
       <div class="sticky-label-row"><span class="lbl-text" id="stickyLabel-${s.ref.replace('·','-')}">${esc(stickyLabel(s))}</span><button class="copy-btn" onclick="copyStickyLabel('${s.ref}')">Copy</button></div>
       <p class="plabel">What's happening</p>
       <div id="edit-summary-wrap"><p class="pbody-text" onclick="startEditSolutionText('${s.ref}','summary')" style="cursor:pointer">${esc(s.summary)} <span class="edit-hint">✎</span></p></div>
-      ${s.ratingWhy?`<p class="plabel">Why I rated it this way</p><p class="pbody-text" style="color:var(--ink-soft)">${esc(s.ratingWhy)}</p>`:''}`;
+      ${s.ratingWhy?`<p class="plabel">Why I rated it this way</p><div id="edit-ratingWhy-wrap"><p class="pbody-text" onclick="startEditSolutionText('${s.ref}','ratingWhy')" style="cursor:pointer;color:var(--ink-soft)">${esc(s.ratingWhy)} <span class="edit-hint">✎</span></p></div>`:`<p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Why I rated it this way <button class="inline-edit-cancel" style="margin:0" onclick="startEditSolutionText('${s.ref}','ratingWhy')">Add</button></p><div id="edit-ratingWhy-wrap"></div>`}`;
     document.getElementById('tab-quotes').innerHTML = quotesForSolution(s) + (s.relatedInsightIds||[]).map(function(iid){
       const ins = insightById[iid]; if(!ins) return '';
       return '<div class="quote-block" style="border-left-color:' + (ins.type==='pain'?'var(--pain)':'var(--delight)') + '"><p>"' + esc(ins.text) + '"</p><span>Directly linked insight</span></div>';
@@ -229,7 +228,6 @@ function openPanel(kind,id,isNavCall){
     switchTab('overview');
   } else if(kind==='gap'){
     const g=GAPS.find(x=>x.id===id); if(!g) return;
-    if(panelEditMode){ renderGapEditMode(g); return; }
     const vBg=g.verdict==='genuine'?'var(--gap-bg)':g.verdict==='partial'?'var(--hold-bg)':'var(--delivery-bg)';
     const vC=g.verdict==='genuine'?'var(--gap)':g.verdict==='partial'?'var(--hold)':'var(--delivery)';
     document.getElementById('panelBadges').innerHTML=`<span class="badge" style="background:${vBg};color:${vC}">${VERDICT_LABEL[g.verdict]}</span><span class="badge" style="background:${PROD_BG[g.product]};color:${PROD_COLOR[g.product]}">${g.product}</span>`;
@@ -237,6 +235,7 @@ function openPanel(kind,id,isNavCall){
     document.getElementById('panelSub').innerHTML=`<span class="editable-val" id="edit-figure-wrap" onclick="startEditGapText('${g.id}','figure')">${esc(g.figure)} <span class="edit-hint">✎</span></span>`;
     document.getElementById('panelScores').innerHTML=`<div class="prop-list">
       <div class="prop-row" id="edit-row-verdict"><span class="prop-row-label">Verdict</span><span class="prop-row-val editable-val" onclick="startEditGapVerdict('${g.id}')">${VERDICT_LABEL[g.verdict]} <span class="edit-hint">✎</span></span></div>
+      <div class="prop-row" id="edit-row-gapstage"><span class="prop-row-label">Stage</span><span class="prop-row-val editable-val" onclick="startEditGapStage('${g.id}')">${esc((STAGES.find(st=>st.id===g.stage)||{}).name||g.stage||'None')} <span class="edit-hint">✎</span></span></div>
     </div>`;
     const relatedMetrics = allSubMetrics().filter(sm=>sm.relatedGap===g.id);
     const relatedSol = g.solution ? solutionByRef[g.solution] : null;
@@ -245,7 +244,7 @@ function openPanel(kind,id,isNavCall){
     allTabs[4].textContent=`Solutions (${g.solution?1:0})`; allTabs[4].style.display='inline';
     allTabs[5].textContent=`Metrics (${relatedMetrics.length})`; allTabs[5].style.display='inline';
     document.getElementById('tab-overview').innerHTML=`
-      <p class="plabel">What the journey map says at this stage</p><p class="pbody-text">${esc(g.mapSays)}</p>
+      <p class="plabel">What the journey map says at this stage</p><div id="edit-mapSays-wrap"><p class="pbody-text" onclick="startEditGapMapSays('${g.id}')" style="cursor:pointer">${esc(g.mapSays)} <span class="edit-hint">✎</span></p></div>
       ${g.discoveryNote?`<div class="flag-box" style="background:var(--hmw-bg);border-left-color:var(--hmw);margin-top:16px"><p style="color:var(--hmw)">${esc(g.discoveryNote).replace(/^Discovery opportunity:/,'<strong>Discovery opportunity:</strong>')}</p></div>`:''}`;
     document.getElementById('tab-insights').innerHTML=`
       <div class="search-hint-row"><span class="sh-label">Search ${esc(g.docName)} for</span><span class="sh-term">"${esc(g.docSearch)}"</span></div>
@@ -285,6 +284,33 @@ function saveGapEditMode(id){
   g.mapSays = document.getElementById('em-mapSays').value;
   g.docName = document.getElementById('em-docName').value;
   g.discoveryNote = document.getElementById('em-discoveryNote').value;
+  openPanel('gap', id, true);
+  render();
+}
+function startEditGapStage(id){
+  const g = GAPS.find(function(x){return x.id===id;}); if(!g) return;
+  const row = document.getElementById('edit-row-gapstage');
+  const valCell = row.querySelector('.prop-row-val');
+  valCell.onclick = null;
+  const currentLabel = (STAGES.find(function(st){return st.id===g.stage;})||{}).name || g.stage || 'None';
+  const optionsHtml = STAGES.map(function(st){ return '<div class="fdropdown-option'+(st.id===g.stage?' checked':'')+'" onclick="event.stopPropagation(); saveEditGapStage(\''+id+'\',\''+st.id+'\')"><span>'+esc(st.name)+'</span></div>'; }).join('');
+  valCell.innerHTML = '<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle(\'open\')">'+esc(currentLabel)+' <span class="chev"></span></button><div class="fdropdown-panel open">'+optionsHtml+'</div></div><button class="inline-edit-cancel" onclick="openPanel(\'gap\',\''+id+'\')">Cancel</button></div>';
+}
+function saveEditGapStage(id, newStage){
+  const g = GAPS.find(function(x){return x.id===id;}); if(!g) return;
+  g.stage = newStage;
+  openPanel('gap', id, true);
+  render();
+}
+function startEditGapMapSays(id){
+  const g = GAPS.find(function(x){return x.id===id;}); if(!g) return;
+  const wrap = document.getElementById('edit-mapSays-wrap');
+  wrap.querySelector('.pbody-text').onclick = null;
+  wrap.innerHTML = '<textarea id="editText-mapSays" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;box-sizing:border-box;font-family:var(--sans)">'+esc(g.mapSays)+'</textarea><div style="margin-top:6px"><button class="inline-edit-save" onclick="saveEditGapMapSays(\''+id+'\')">Save</button> <button class="inline-edit-cancel" onclick="openPanel(\'gap\',\''+id+'\')">Cancel</button></div>';
+}
+function saveEditGapMapSays(id){
+  const g = GAPS.find(function(x){return x.id===id;}); if(!g) return;
+  g.mapSays = document.getElementById('editText-mapSays').value;
   openPanel('gap', id, true);
   render();
 }
@@ -435,6 +461,27 @@ function saveOppEditMode(id){
   o.stage = document.getElementById('em-stage').value;
   o.product = document.getElementById('em-product').value;
   o.highValue = document.getElementById('em-highvalue').checked;
+  openPanel('opp', id, true);
+  render();
+}
+function toggleOppHighValue(id){
+  const o = oppById[id]; if(!o) return;
+  o.highValue = !o.highValue;
+  openPanel('opp', id, true);
+  render();
+}
+function startEditOppStage(id){
+  const o = oppById[id]; if(!o) return;
+  const row = document.getElementById('edit-row-oppstage');
+  const valCell = row.querySelector('.prop-row-val');
+  valCell.onclick = null;
+  const currentLabel = (STAGES.find(function(st){return st.id===o.stage;})||{}).name || o.stage;
+  const optionsHtml = STAGES.map(function(st){ return '<div class="fdropdown-option'+(st.id===o.stage?' checked':'')+'" onclick="event.stopPropagation(); saveEditOppStage(\''+id+'\',\''+st.id+'\')"><span>'+esc(st.name)+'</span></div>'; }).join('');
+  valCell.innerHTML = '<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle(\'open\')">'+esc(currentLabel)+' <span class="chev"></span></button><div class="fdropdown-panel open">'+optionsHtml+'</div></div><button class="inline-edit-cancel" onclick="openPanel(\'opp\',\''+id+'\')">Cancel</button></div>';
+}
+function saveEditOppStage(id, newStage){
+  const o = oppById[id]; if(!o) return;
+  o.stage = newStage;
   openPanel('opp', id, true);
   render();
 }
@@ -629,6 +676,27 @@ function saveInsightEditMode(id){
   openPanel('insight', id, true);
   render();
 }
+function toggleInsightAnalytics(id){
+  const i = insightById[id]; if(!i) return;
+  i.analytics = !i.analytics;
+  openPanel('insight', id, true);
+  render();
+}
+function startEditInsightStage(id){
+  const i = insightById[id]; if(!i) return;
+  const row = document.getElementById('edit-row-stage');
+  const valCell = row.querySelector('.prop-row-val');
+  valCell.onclick = null;
+  const currentLabel = (STAGES.find(function(st){return st.id===i.stage;})||{}).name || i.stage;
+  const optionsHtml = STAGES.map(function(st){ return '<div class="fdropdown-option'+(st.id===i.stage?' checked':'')+'" onclick="event.stopPropagation(); saveEditInsightStage(\''+id+'\',\''+st.id+'\')"><span>'+esc(st.name)+'</span></div>'; }).join('');
+  valCell.innerHTML = '<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle(\'open\')">'+esc(currentLabel)+' <span class="chev"></span></button><div class="fdropdown-panel open">'+optionsHtml+'</div></div><button class="inline-edit-cancel" onclick="openPanel(\'insight\',\''+id+'\')">Cancel</button></div>';
+}
+function saveEditInsightStage(id, newStage){
+  const i = insightById[id]; if(!i) return;
+  i.stage = newStage;
+  openPanel('insight', id, true);
+  render();
+}
 function startEditInsightText(id){
   const i = insightById[id]; if(!i) return;
   const wrap = document.getElementById('edit-text-wrap');
@@ -707,10 +775,10 @@ function saveSolutionEditMode(ref){
 }
 function startEditSolutionText(ref, field){
   const s = solutionByRef[ref]; if(!s) return;
-  const wrap = field==='title' ? document.getElementById('edit-title-wrap') : document.querySelector('#edit-summary-wrap .pbody-text');
+  const wrap = field==='title' ? document.getElementById('edit-title-wrap') : document.getElementById('edit-'+field+'-wrap').querySelector('.pbody-text') || document.getElementById('edit-'+field+'-wrap');
   wrap.onclick = null;
   const currentVal = s[field] || '';
-  const isLong = field==='summary';
+  const isLong = field==='summary' || field==='ratingWhy';
   wrap.outerHTML = `<span class="inline-edit-row" id="edit-${field}-wrap" style="${isLong?'display:flex;flex-direction:column;align-items:flex-start;gap:6px':''}">
     ${isLong
       ? `<textarea id="editText-${field}" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;box-sizing:border-box;font-family:var(--sans)">${esc(currentVal)}</textarea>`
@@ -733,16 +801,17 @@ function startEditSolutionField(ref, field){
   const row = document.getElementById('edit-row-'+field);
   const valCell = row.querySelector('.prop-row-val');
   valCell.onclick = null;
-  let options, currentVal;
-  if(field==='effort'){ currentVal=s.effort; options=[1,2,3,4,5].map(n=>({v:n, l:EFFORT_LABEL[n]})); }
-  else if(field==='mv' || field==='bv'){ currentVal=s[field]; options=[1,2,3,4,5].map(n=>({v:n, l:n+'/5'})); }
-  else if(field==='road'){ currentVal=s.road; options=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>({v:r, l:ROAD_LABEL[r]})); }
+  let options, currentVal, currentLabel;
+  if(field==='effort'){ currentVal=s.effort; currentLabel=EFFORT_LABEL[currentVal]; options=[1,2,3,4,5].map(n=>({v:n, l:EFFORT_LABEL[n]})); }
+  else if(field==='mv' || field==='bv'){ currentVal=s[field]; currentLabel=currentVal+'/5'; options=[1,2,3,4,5].map(n=>({v:n, l:n+'/5'})); }
+  else if(field==='road'){ currentVal=s.road; currentLabel=ROAD_LABEL[currentVal]; options=['on-roadmap','not-on-roadmap','on-hold','in-delivery'].map(r=>({v:r, l:ROAD_LABEL[r]})); }
+  else if(field==='stage'){ currentVal=s.stage; currentLabel=(STAGES.find(function(st){return st.id===currentVal;})||{}).name||currentVal; options=STAGES.map(function(st){ return {v:st.id, l:st.name}; }); }
   const optionsHtml = options.map(o=>`<div class="fdropdown-option${o.v===currentVal?' checked':''}" onclick="event.stopPropagation(); saveEditSolutionField('${ref}','${field}','${o.v}')"><span>${esc(String(o.l))}</span></div>`).join('');
-  valCell.innerHTML = `<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')">${esc(String(field==='road'?ROAD_LABEL[currentVal]:field==='effort'?EFFORT_LABEL[currentVal]:currentVal+'/5'))} <span class="chev"></span></button><div class="fdropdown-panel open">${optionsHtml}</div></div><button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button></div>`;
+  valCell.innerHTML = `<div class="inline-edit-row"><div class="fdropdown" style="flex-shrink:0"><button class="fdropdown-trigger" style="font-size:12.5px;padding:5px 10px" onclick="event.stopPropagation(); this.nextElementSibling.classList.toggle('open')">${esc(String(currentLabel))} <span class="chev"></span></button><div class="fdropdown-panel open">${optionsHtml}</div></div><button class="inline-edit-cancel" onclick="openPanel('solution','${ref}')">Cancel</button></div>`;
 }
 function saveEditSolutionField(ref, field, rawValue){
   const s = solutionByRef[ref]; if(!s) return;
-  if(field==='road') s.road = rawValue;
+  if(field==='road' || field==='stage') s[field] = rawValue;
   else s[field] = parseInt(rawValue);
   // Updates the in-memory copy only — nothing is written anywhere permanent yet.
   // This is a live preview of the editing interaction, refreshing the page reloads
@@ -750,23 +819,12 @@ function saveEditSolutionField(ref, field, rawValue){
   openPanel('solution', ref);
   render();
 }
-let panelEditMode = false;
-function togglePanelEditMode(){
-  panelEditMode = !panelEditMode;
-  const btn = document.getElementById('panelEditToggle');
-  btn.classList.toggle('active', panelEditMode);
-  btn.textContent = panelEditMode ? '✓ Done' : '✎ Edit';
-  if(currentPanelKind && currentPanelId) openPanel(currentPanelKind, currentPanelId, true);
-}
 function closePanel(){
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
   panelHistory=[]; currentPanelKind=null; currentPanelId=null;
   document.body.classList.remove('has-selection');
   clearSelection(); selectedKey=null;
-  panelEditMode = false;
-  const btn = document.getElementById('panelEditToggle');
-  if(btn){ btn.classList.remove('active'); btn.textContent = '✎ Edit'; }
 }
 
 function switchTab(t){
