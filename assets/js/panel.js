@@ -153,7 +153,7 @@ function openPanel(kind,id,isNavCall){
       <p class="plabel">Related research gap</p><div class="connect-section">${gapChipsForInsight(i)}</div>
       ${siblings?`<p class="plabel">Related pain points</p><div class="connect-section">${siblings}</div>`:''}`;
     document.getElementById('tab-metrics').innerHTML=insightLinkedSubs.length?`<div class="connect-section">${insightLinkedSubs.map(sm=>`<div class="link-item-row" onclick="openPanelNav('submetric','${sm.id}')"><span class="link-item-text">${esc(sm.label)}</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">${esc(sm.value)}</span></div>`).join('')}</div>`:'<span class="empty-note">Not tied to a metrics card yet.</span>';
-    document.getElementById('tab-opps').innerHTML=`<div class="connect-section">${chipsForInsight(i)}</div>`;
+    document.getElementById('tab-opps').innerHTML=`<div id="insight-opps-view"><p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Related opportunities (HMWs) <button class="inline-edit-cancel" style="margin:0" onclick="startEditInsightOpps('${i.id}')">Edit</button></p><div class="connect-section">${chipsForInsight(i)}</div></div>`;
     document.getElementById('tab-solutions').innerHTML=`<div class="connect-section">${solutionsForInsight(i)}</div>`;
     switchTab('overview');
   } else if(kind==='opp'){
@@ -191,7 +191,7 @@ function openPanel(kind,id,isNavCall){
       <div class="prop-row" id="edit-row-bv"><span class="prop-row-label">Business value</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','bv')">${s.bv}/5 <span class="edit-hint">✎</span></span></div>
       <div class="prop-row" id="edit-row-road"><span class="prop-row-label">Status</span><span class="prop-row-val editable-val" onclick="startEditSolutionField('${s.ref}','road')">${ROAD_LABEL[s.road]} <span class="edit-hint">✎</span></span></div>
     </div>`;
-    const insightCount = new Set((s.opps||[]).flatMap(oid=>(oppById[oid]||{insights:[]}).insights)).size;
+    const insightCount = new Set((s.opps||[]).flatMap(oid=>(oppById[oid]||{insights:[]}).insights).concat(s.relatedInsightIds||[])).size;
     const solGaps = GAPS.filter(g=>g.solution===s.ref);
     const solLinkedSubs = allSubMetrics().filter(sm=>solGaps.some(g=>g.id===sm.relatedGap));
     allTabs[1].textContent=`Quotes (${quoteCountForSolution(s)})`; allTabs[1].style.display='inline';
@@ -203,20 +203,27 @@ function openPanel(kind,id,isNavCall){
     document.getElementById('tab-overview').innerHTML=`
       <div class="sticky-label-row"><span class="lbl-text" id="stickyLabel-${s.ref.replace('·','-')}">${esc(stickyLabel(s))}</span><button class="copy-btn" onclick="copyStickyLabel('${s.ref}')">Copy</button></div>
       <p class="plabel">What's happening</p>
-      <div id="edit-summary-wrap"><p class="pbody-text editable-val" onclick="startEditSolutionText('${s.ref}','summary')">${esc(s.summary)} <span class="edit-hint">✎</span></p></div>
+      <div id="edit-summary-wrap"><p class="pbody-text" onclick="startEditSolutionText('${s.ref}','summary')" style="cursor:pointer">${esc(s.summary)} <span class="edit-hint">✎</span></p></div>
       ${s.ratingWhy?`<p class="plabel">Why I rated it this way</p><p class="pbody-text" style="color:var(--ink-soft)">${esc(s.ratingWhy)}</p>`:''}`;
-    document.getElementById('tab-quotes').innerHTML = quotesForSolution(s);
+    document.getElementById('tab-quotes').innerHTML = quotesForSolution(s) + (s.relatedInsightIds||[]).map(function(iid){
+      const ins = insightById[iid]; if(!ins) return '';
+      return '<div class="quote-block" style="border-left-color:' + (ins.type==='pain'?'var(--pain)':'var(--delight)') + '"><p>"' + esc(ins.text) + '"</p><span>Directly linked insight</span></div>';
+    }).join('');
     document.getElementById('tab-insights').innerHTML=`
       <p class="plabel">Journey map</p>
       <div class="link-row"><span class="link-kind jm">Map</span><span class="link-text"><a href="${s.product==='Home'?HOME_JM:MOTOR_JM}" target="_blank" rel="noreferrer">Open the ${s.product} journey map ↗</a></span></div>
       ${journeySearchHint(s)}
       <p class="plabel">Research</p>
       ${s.research?`<div class="link-row"><span class="link-kind res">Research</span><span class="link-text"><a href="${s.research.url}" target="_blank" rel="noreferrer">${esc(s.research.title)}${s.research.date?', '+esc(s.research.date):''} ↗</a></span></div>${researchSearchHint(s)}`:`<div class="link-row"><span class="link-kind res">Research</span><span class="link-text" style="color:var(--ink-faint)">No research document found beyond the journey map itself for this item.</span></div>`}
-      <p class="plabel">Related pain points / delights</p><div class="connect-section">${insightsForSolution(s)}</div>
+      <p class="plabel">Related pain points / delights (via the linked opportunity)</p><div class="connect-section">${insightsForSolution(s)}</div>
+      <p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Directly linked pain points / delights <button class="inline-edit-cancel" style="margin:0" onclick="startEditSolutionInsights('${s.ref}')">Edit</button></p>
+      <div id="sol-insights-picker">${(s.relatedInsightIds||[]).length ? '<div class="connect-section">' + s.relatedInsightIds.map(function(iid){ var ins=insightById[iid]; return ins ? '<div class="link-item-row" onclick="openPanelNav(\'insight\',\''+iid+'\')"><span class="card-icon '+ins.type+'" style="width:18px;height:18px;font-size:10px">'+(ins.type==='pain'?'!':'♥')+'</span><span class="link-item-text">'+esc(ins.text.slice(0,60))+(ins.text.length>60?'…':'')+'</span></div>' : ''; }).join('') + '</div>' : '<span class="empty-note">None linked directly yet, click Edit to add some.</span>'}</div>
       ${s.ideaSource?`<p class="plabel">Where this idea came from</p><div class="flag-box" style="background:var(--idea-bg);border-left-color:var(--idea)"><p style="color:#7A5A0A">💡 ${esc(s.ideaSource)}</p></div>${s.ideaLink?`<div class="link-row"><span class="link-kind res">Source</span><span class="link-text"><a href="${s.ideaLink.url}" target="_blank" rel="noreferrer">${esc(s.ideaLink.title)} ↗</a></span></div>`:''}`:''}
       ${s.assumption?`<p class="plabel">My working assumption — not confirmed by research</p><div class="flag-box" style="background:#FFF9EC;border-left-color:#E0972C"><p style="color:#7A5A12;font-style:italic">${esc(s.assumption)}</p></div>`:''}
       ${s.flags.length?`<p class="plabel">Worth knowing</p>${s.flags.map(f=>`<div class="flag-box"><p>${esc(f)}</p></div>`).join('')}`:''}`;
-    document.getElementById('tab-metrics').innerHTML=solLinkedSubs.length?`<div class="connect-section">${solLinkedSubs.map(sm=>`<div class="link-item-row" onclick="openPanelNav('submetric','${sm.id}')"><span class="link-item-text">${esc(sm.label)}</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">${esc(sm.value)}</span></div>`).join('')}</div>`:'<span class="empty-note">Not tied to a metrics card yet.</span>';
+    document.getElementById('tab-metrics').innerHTML = (solLinkedSubs.length?`<p class="plabel">Linked via analytics gap</p><div class="connect-section">${solLinkedSubs.map(sm=>`<div class="link-item-row" onclick="openPanelNav('submetric','${sm.id}')"><span class="link-item-text">${esc(sm.label)}</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">${esc(sm.value)}</span></div>`).join('')}</div>`:'') +
+      `<p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Directly linked metrics <button class="inline-edit-cancel" style="margin:0" onclick="startEditSolutionMetrics('${s.ref}')">Edit</button></p>
+      <div id="sol-metrics-picker">${(s.relatedMetricIds||[]).length ? '<div class="connect-section">' + s.relatedMetricIds.map(function(mid){ var sm=SUBMETRICS.find(function(x){return x.id===mid;}); return sm ? '<div class="link-item-row" onclick="openPanelNav(\'submetric\',\''+mid+'\')"><span class="link-item-text">'+esc(sm.label)+'</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">'+esc(sm.value)+'</span></div>' : ''; }).join('') + '</div>' : '<span class="empty-note">None linked directly yet, click Edit to add some.</span>'}</div>`;
     document.getElementById('tab-opps').innerHTML=`<div id="sol-opps-view"><p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Related opportunity (HMW) <button class="inline-edit-cancel" style="margin:0" onclick="startEditSolutionOpp('${s.ref}')">Edit</button></p><div class="connect-section">${chipsForSolutionOpps(s)}</div></div>`;
     document.getElementById('tab-roadmap').innerHTML=`<div class="status-box" id="roadmap-note-view"><p class="editable-val" onclick="startEditRoadmapNote('${s.ref}')">${esc(s.roadmapNote||'No roadmap note recorded.')} <span class="edit-hint">✎</span></p></div><p style="font-size:11px;color:var(--ink-faint);margin-top:10px">Added to squad Miro board: ${s.onBoard?'Yes':'Not yet'}</p>`;
     switchTab('overview');
@@ -245,8 +252,8 @@ function openPanel(kind,id,isNavCall){
       ${g.jmSearch?`<div class="search-hint-row"><span class="sh-label">Search the journey map for</span><span class="sh-term">"${esc(g.jmSearch)}"</span></div>`:''}
       <p class="plabel">Where this figure comes from</p><p class="pbody-text">${esc(g.docName)} — this is not a journey map document; check it directly for the exact figure and context.</p>
       <p class="plabel">Related pain points</p><div class="connect-section">${relatedSol?insightsForSolution(relatedSol):'<span class="empty-note">No linked solution to trace pain points from — this gap rests on the figure alone.</span>'}</div>`;
-    document.getElementById('tab-metrics').innerHTML=`
-      ${relatedMetrics.length?relatedMetrics.map(sm=>`<div class="link-item-row" onclick="openPanelNav('submetric','${sm.id}')"><span class="link-item-text">${esc(sm.label)}</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">${esc(sm.value)}</span></div>`).join(''):'<span class="empty-note">Not tied to a metrics card yet.</span>'}`;
+    document.getElementById('tab-metrics').innerHTML=`<div id="gap-metrics-view"><p class="plabel" style="display:flex;align-items:center;justify-content:space-between">Linked metrics <button class="inline-edit-cancel" style="margin:0" onclick="startEditGapMetrics('${g.id}')">Edit</button></p>
+      ${relatedMetrics.length?'<div class="connect-section">'+relatedMetrics.map(sm=>`<div class="link-item-row" onclick="openPanelNav('submetric','${sm.id}')"><span class="link-item-text">${esc(sm.label)}</span><span class="link-item-pill" style="background:var(--bg);color:var(--ink-soft)">${esc(sm.value)}</span></div>`).join('')+'</div>':'<span class="empty-note">Not tied to a metrics card yet, click Edit to link one.</span>'}</div>`;
     document.getElementById('tab-solutions').innerHTML=`<div class="connect-section">${chipForSolution(g.solution)}</div>`;
     switchTab('overview');
   }
@@ -446,6 +453,73 @@ function saveEditOppText(id){
   openPanel('opp', id);
   render();
 }
+function startEditGapMetrics(id){
+  const g = GAPS.find(function(x){ return x.id===id; }); if(!g) return;
+  const view = document.getElementById('gap-metrics-view');
+  const currentMetricIds = SUBMETRICS.filter(function(sm){ return sm.relatedGap===id; }).map(function(sm){ return sm.id; });
+  view.innerHTML = '<p class="plabel">Which metrics relate to this gap?</p><div id="gapMetricsAutocomplete"></div><div style="margin-top:10px"><button class="inline-edit-cancel" onclick="openPanel(\'gap\',\''+id+'\')">Done</button></div>';
+  renderGenericAutocomplete('gapMetricsAutocomplete', {
+    items: SUBMETRICS,
+    getId: function(m){ return m.id; },
+    getLabel: function(m){ return m.label + ' (' + m.value + ')'; },
+    getBadge: function(m){ return {text: (THEMES[m.theme]||{label:m.theme}).label, bg: 'var(--bg)', color: 'var(--ink-soft)'}; },
+    selectedIds: currentMetricIds,
+    onChange: function(newMetricIds){
+      // A metric can only point at one gap at a time in this data shape, so selecting it here
+      // sets that metric's relatedGap to this gap, and deselecting clears it.
+      SUBMETRICS.forEach(function(sm){
+        if(newMetricIds.indexOf(sm.id) !== -1) sm.relatedGap = id;
+        else if(sm.relatedGap === id) sm.relatedGap = null;
+      });
+      render();
+    },
+    placeholder: 'Search metrics...'
+  });
+}
+function startEditInsightOpps(id){
+  const i = insightById[id]; if(!i) return;
+  const view = document.getElementById('insight-opps-view');
+  const currentOppIds = OPPS.filter(function(o){ return o.insights.includes(id); }).map(function(o){ return o.id; });
+  view.innerHTML = '<p class="plabel">Which opportunities relate to this?</p><div id="insightOppsAutocomplete"></div><div style="margin-top:10px"><button class="inline-edit-cancel" onclick="openPanel(\'insight\',\''+id+'\')">Done</button></div>';
+  renderGenericAutocomplete('insightOppsAutocomplete', {
+    items: OPPS,
+    getId: function(o){ return o.id; },
+    getLabel: function(o){ return o.text; },
+    getBadge: function(){ return {text: 'HMW', bg: 'var(--hmw-bg)', color: 'var(--hmw)'}; },
+    selectedIds: currentOppIds,
+    onChange: function(newOppIds){
+      // Reciprocal edit: this insight's id gets added or removed from each opportunity's own .insights array,
+      // rather than storing the relationship twice in two places.
+      OPPS.forEach(function(o){
+        const shouldHave = newOppIds.indexOf(o.id) !== -1;
+        const has = o.insights.indexOf(id) !== -1;
+        if(shouldHave && !has) o.insights.push(id);
+        if(!shouldHave && has) o.insights.splice(o.insights.indexOf(id), 1);
+      });
+      render();
+    },
+    placeholder: 'Search opportunities...'
+  });
+}
+function startEditSolutionMetrics(ref){
+  const s = solutionByRef[ref]; if(!s) return;
+  const view = document.getElementById('sol-metrics-picker');
+  view.innerHTML = '<div id="solMetricsAutocomplete"></div><div style="margin-top:10px"><button class="inline-edit-cancel" onclick="openPanel(\'solution\',\''+ref+'\')">Done</button></div>';
+  renderGenericAutocomplete('solMetricsAutocomplete', {
+    items: SUBMETRICS,
+    getId: function(m){ return m.id; },
+    getLabel: function(m){ return m.label + ' (' + m.value + ')'; },
+    getBadge: function(m){ return {text: (THEMES[m.theme]||{label:m.theme}).label, bg: 'var(--bg)', color: 'var(--ink-soft)'}; },
+    selectedIds: s.relatedMetricIds, onChange: function(newIds){ s.relatedMetricIds = newIds; render(); },
+    placeholder: 'Search metrics...'
+  });
+}
+function startEditSolutionInsights(ref){
+  const s = solutionByRef[ref]; if(!s) return;
+  const view = document.getElementById('sol-insights-picker');
+  view.innerHTML = '<div id="solInsightsAutocomplete"></div><div style="margin-top:10px"><button class="inline-edit-cancel" onclick="openPanel(\'solution\',\''+ref+'\')">Done</button></div>';
+  renderInsightAutocomplete('solInsightsAutocomplete', s.relatedInsightIds, function(newIds){ s.relatedInsightIds = newIds; render(); });
+}
 function startEditOppInsights(id){
   const o = oppById[id]; if(!o) return;
   const view = document.getElementById('opp-insights-view');
@@ -458,57 +532,77 @@ function startEditOppInsights(id){
 // A small, reusable searchable picker: shows selected items as removable chips, and up to 6
 // matching suggestions as soon as the field is focused or typed into, rather than one long
 // scrollable list of everything.
-function renderInsightAutocomplete(containerId, selectedIds, onChange){
+// A generic, reusable searchable picker. Works for linking to ANY data array
+// (insights, opportunities, solutions, metrics, gaps), not just insights.
+// config: { items, getId(item), getLabel(item), getBadge(item) -> {text,bg,color} or null, selectedIds, onChange }
+const acRegistry = {};
+function renderGenericAutocomplete(containerId, config){
   const container = document.getElementById(containerId);
+  acRegistry[containerId] = config;
   function draw(query){
     const q = (query||'').toLowerCase();
-    const matches = INSIGHTS.filter(function(i){ return i.text.toLowerCase().indexOf(q) !== -1; }).slice(0, 6);
-    const chips = selectedIds.map(function(sid){
-      const i = insightById[sid]; if(!i) return '';
-      return '<span class="ac-chip">' + esc(i.text.slice(0,40)) + (i.text.length>40?'…':'') + '<span class="ac-chip-x" onclick="event.stopPropagation(); removeAutocompleteItem(\''+containerId+'\',\''+sid+'\')">×</span></span>';
+    const matches = config.items.filter(function(it){ return config.getLabel(it).toLowerCase().indexOf(q) !== -1; }).slice(0, 6);
+    const chips = config.selectedIds.map(function(sid){
+      const it = config.items.find(function(x){ return config.getId(x) === sid; }); if(!it) return '';
+      const label = config.getLabel(it);
+      return '<span class="ac-chip">' + esc(label.slice(0,40)) + (label.length>40?'…':'') + '<span class="ac-chip-x" onclick="event.stopPropagation(); genericAcRemove(\''+containerId+'\',\''+sid+'\')">×</span></span>';
     }).join('');
-    const suggestions = matches.map(function(i){
-      const already = selectedIds.indexOf(i.id) !== -1;
-      return '<div class="ac-suggestion' + (already?' ac-suggestion-selected':'') + '" onmousedown="event.preventDefault(); toggleAutocompleteItem(\'' + containerId + '\',\'' + i.id + '\')">' +
-        '<span class="tiny-pill" style="background:' + (i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)') + ';color:' + (i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)') + '">' + i.type + '</span> ' +
-        esc(i.text.slice(0,70)) + (i.text.length>70?'…':'') + (already ? ' <span class="ac-check">✓</span>' : '') +
+    const suggestions = matches.map(function(it){
+      const id = config.getId(it);
+      const already = config.selectedIds.indexOf(id) !== -1;
+      const badge = config.getBadge ? config.getBadge(it) : null;
+      const badgeHtml = badge ? '<span class="tiny-pill" style="background:' + badge.bg + ';color:' + badge.color + '">' + esc(badge.text) + '</span> ' : '';
+      const label = config.getLabel(it);
+      return '<div class="ac-suggestion' + (already?' ac-suggestion-selected':'') + '" onmousedown="event.preventDefault(); genericAcToggle(\'' + containerId + '\',\'' + id + '\')">' +
+        badgeHtml + esc(label.slice(0,70)) + (label.length>70?'…':'') + (already ? ' <span class="ac-check">✓</span>' : '') +
         '</div>';
     }).join('') || '<div class="ac-suggestion" style="color:var(--ink-faint);font-style:italic">No matches</div>';
     container.innerHTML = '<div class="ac-chips">' + chips + '</div>' +
-      '<input type="text" class="ac-input" placeholder="Search insights..." oninput="renderInsightAutocompleteFilter(\'' + containerId + '\', this.value)" onfocus="renderInsightAutocompleteFilter(\'' + containerId + '\', this.value)">' +
+      '<input type="text" class="ac-input" placeholder="' + esc(config.placeholder||'Search...') + '" oninput="genericAcFilter(\'' + containerId + '\', this.value)" onfocus="genericAcFilter(\'' + containerId + '\', this.value)">' +
       '<div class="ac-suggestions">' + suggestions + '</div>';
   }
   container._acDraw = draw;
-  container._acSelected = selectedIds;
-  container._acOnChange = onChange;
   draw('');
 }
-function renderInsightAutocompleteFilter(containerId, query){
-  const container = document.getElementById(containerId);
-  const q = (query||'').toLowerCase();
-  const matches = INSIGHTS.filter(function(i){ return i.text.toLowerCase().indexOf(q) !== -1; }).slice(0, 6);
-  const suggestionsHtml = matches.map(function(i){
-    const already = container._acSelected.indexOf(i.id) !== -1;
-    return '<div class="ac-suggestion' + (already?' ac-suggestion-selected':'') + '" onmousedown="event.preventDefault(); toggleAutocompleteItem(\'' + containerId + '\',\'' + i.id + '\')">' +
-      '<span class="tiny-pill" style="background:' + (i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)') + ';color:' + (i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)') + '">' + i.type + '</span> ' +
-      esc(i.text.slice(0,70)) + (i.text.length>70?'…':'') + (already ? ' <span class="ac-check">✓</span>' : '') +
-      '</div>';
-  }).join('') || '<div class="ac-suggestion" style="color:var(--ink-faint);font-style:italic">No matches</div>';
-  container.querySelector('.ac-suggestions').innerHTML = suggestionsHtml;
+let acFocusGuard = false;
+function genericAcFilter(containerId, query){
+  document.getElementById(containerId)._acDraw(query);
+  const input = document.getElementById(containerId).querySelector('.ac-input');
+  if(input){
+    input.value = query;
+    if(!acFocusGuard){
+      acFocusGuard = true;
+      input.focus();
+      acFocusGuard = false;
+    }
+    input.setSelectionRange(query.length, query.length);
+  }
 }
-function toggleAutocompleteItem(containerId, insightId){
-  const container = document.getElementById(containerId);
-  const idx = container._acSelected.indexOf(insightId);
-  if(idx === -1) container._acSelected.push(insightId);
-  else container._acSelected.splice(idx, 1);
-  container._acOnChange(container._acSelected.slice());
-  const inputVal = container.querySelector('.ac-input') ? container.querySelector('.ac-input').value : '';
-  container._acDraw(inputVal);
-  const freshInput = container.querySelector('.ac-input');
-  if(freshInput){ freshInput.value = inputVal; freshInput.focus(); }
+function genericAcToggle(containerId, id){
+  const config = acRegistry[containerId];
+  const idx = config.selectedIds.indexOf(id);
+  if(idx === -1) config.selectedIds.push(id);
+  else config.selectedIds.splice(idx, 1);
+  config.onChange(config.selectedIds.slice());
+  const inputVal = document.getElementById(containerId).querySelector('.ac-input') ? document.getElementById(containerId).querySelector('.ac-input').value : '';
+  document.getElementById(containerId)._acDraw(inputVal);
+  const freshInput = document.getElementById(containerId).querySelector('.ac-input');
+  if(freshInput){
+    freshInput.value = inputVal;
+    if(!acFocusGuard){ acFocusGuard = true; freshInput.focus(); acFocusGuard = false; }
+  }
 }
-function removeAutocompleteItem(containerId, insightId){
-  toggleAutocompleteItem(containerId, insightId);
+function genericAcRemove(containerId, id){ genericAcToggle(containerId, id); }
+
+// Convenience wrapper for insights specifically, kept for anything already using it.
+function renderInsightAutocomplete(containerId, selectedIds, onChange){
+  renderGenericAutocomplete(containerId, {
+    items: INSIGHTS,
+    getId: function(i){ return i.id; },
+    getLabel: function(i){ return i.text; },
+    getBadge: function(i){ return {text: i.type, bg: i.type==='pain'?'var(--pain-bg)':i.type==='delight'?'var(--delight-bg)':'var(--obs-bg)', color: i.type==='pain'?'var(--pain)':i.type==='delight'?'var(--delight)':'var(--obs)'}; },
+    selectedIds: selectedIds, onChange: onChange, placeholder: 'Search insights...'
+  });
 }
 function renderInsightEditMode(i){
   document.getElementById('panelBadges').innerHTML=`<span class="badge">Editing insight</span>`;

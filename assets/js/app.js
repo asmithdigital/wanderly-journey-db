@@ -463,6 +463,8 @@ async function loadJourneyData(){
   INSIGHTS = data.INSIGHTS; OPPS = data.OPPS; GAPS = data.GAPS;
   SOLUTIONS.forEach(s=>{ s.onBoard = ONBOARD_REFS.has(s.ref); });
   SOLUTIONS.forEach(s=>{ s.opps = OPPS.filter(o=>o.solution===s.ref).map(o=>o.id); });
+  SOLUTIONS.forEach(s=>{ if(!Array.isArray(s.relatedInsightIds)) s.relatedInsightIds = []; });
+  SOLUTIONS.forEach(s=>{ if(!Array.isArray(s.relatedMetricIds)) s.relatedMetricIds = []; });
   window.solutionByRef = {}; SOLUTIONS.forEach(s=>solutionByRef[s.ref]=s);
   window.insightById = {}; INSIGHTS.forEach(i=>insightById[i.id]=i);
   window.oppById = {}; OPPS.forEach(o=>oppById[o.id]=o);
